@@ -3,7 +3,7 @@ name: tiebreak
 on: [push]
 
 jobs:
-  rxdb-supabase:
+  tiebreak:
     runs-on: ubuntu-latest
 
     concurrency:
