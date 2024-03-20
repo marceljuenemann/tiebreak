@@ -1,5 +1,9 @@
 # Tiebreak
 
+![NPM](https://img.shields.io/npm/l/tiebreak)
+![NPM](https://img.shields.io/npm/v/tiebreak)
+![GitHub Workflow Status](https://github.com/marceljuenemann/tiebreak/actions/workflows/tiebreak.yml/badge.svg?branch=main)
+
 Tiebreak is a TypeScript library for calculating various tournament tiebreak scores. The focus lies on chess tournaments and implementing the algorithms specified by FIDE, the world chess organization.
 
 ## Supported Tie Breaks
