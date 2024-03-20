@@ -14,6 +14,21 @@ Tiebreak is a TypeScript library for calculating various tournament tiebreak sco
 * **Tested:** The code should be extensively covered by unit tests.
 * **Opinionated:** The library does not try to implement every possible tie break with every possible configuration. Instead, the focus lies on implementing tie breaks and configurations that make the most sense to use in real tournaments.
 
+## Installation
+
+TODO
+
 ## Usage
 
 TODO
+
+## Development
+
+Commands:
+
+* Build: `npm run build`
+* Unit tests: `npm run test` or `npm run test:watch`
+* Unit test coverage: `npm run test:coverage` (Not working yet?)
+* Format code: `npm run format`
+* Lint: `npm run lint`
+* Spell check: `npm run spell:check`
