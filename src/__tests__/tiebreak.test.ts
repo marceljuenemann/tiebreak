@@ -1,34 +1,20 @@
 import { describe, expect, it } from "vitest"
 
 import { TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
+import { PlayerId, RoundResults, Score } from "../results.js"
 
 describe("TiebreakCalculation", () => {
   describe("score", () => {
     it("should sum score of all pairings", () => {
       const tiebreak = new TiebreakCalculation(
         [
-          {
-            round: 1,
-            pairings: [{ white: "A", black: "B", scoreWhite: 1, scoreBlack: 0, forfeited: false }],
-          },
-          {
-            round: 2,
-            pairings: [{ white: "C", black: "A", scoreWhite: 0, scoreBlack: 1, forfeited: true }],
-          },
-          {
-            round: 3,
-            pairings: [
-              { white: "C", black: "B", scoreWhite: 0.5, scoreBlack: 0.5, forfeited: false },
-            ],
-          },
-          {
-            round: 4,
-            pairings: [{ white: "B", black: "A", scoreWhite: 1, scoreBlack: 0, forfeited: true }],
-          },
+          round(1, ["A:B 1:0"]),
+          round(2, ["C:A 0:1 forfeit"]),
+          round(3, ["C:B 0.5:0.5"]),
+          round(4, ["B:A 1:0 forfeit"]),
         ],
         { unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE },
       )
-
       expect(tiebreak.score("A", 1)).toEqual(1)
       expect(tiebreak.score("A", 2)).toEqual(2)
       expect(tiebreak.score("A", 3)).toEqual(2)
@@ -58,6 +44,25 @@ describe("TiebreakCalculation", () => {
     })
   })
 })
+
+/**
+ * Helper for specifying a round results in a more readable format, e.g. "A B 1 0".
+ */
+function round(round: number, pairings: string[]): RoundResults {
+  return {
+    round,
+    pairings: pairings.map((pairing) => {
+      const [white, black, scoreWhite, scoreBlack, forfeited] = pairing.replace(":", " ").split(" ")
+      return {
+        white,
+        black,
+        scoreWhite: Number(scoreWhite) as Score,
+        scoreBlack: Number(scoreBlack) as Score,
+        forfeited: !!forfeited,
+      }
+    }),
+  }
+}
 
 /*
 import { Ranking, TieBreak } from './ranking';
