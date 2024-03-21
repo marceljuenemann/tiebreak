@@ -3,6 +3,8 @@ import { PlayerId, RoundResults, Score } from "./results.js"
 export enum UnplayedRoundsAdjustment {
   /**
    * Any unplayed games are counted according to the points that were scored.
+   * No "virtual opponents" are created when a player was not paired against
+   * a real player.
    */
   NONE = "NONE",
 
@@ -53,19 +55,33 @@ export class TiebreakCalculation {
    * Returns the total points the given player scored by the given round.
    */
   public score(player: PlayerId, round: number): number {
-    return this.sum(
-      this.results.getAll(player, round).map((result) => {
-        if (result === null) {
+    const rounds = this.results.getAll(player, round).map((result) => {
+      switch (result) {
+        case "unpaired":
           return 0
-        } else if (result === "allocated-bye") {
+        case "allocated-bye":
           return 1
-        } else if (result === "half-point-bye") {
+        case "half-point-bye":
           return 0.5
-        } else {
+        default:
           return result.score
-        }
-      }),
-    )
+      }
+    })
+    return this.sum(rounds)
+  }
+
+  /**
+   * Buchholz score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
+   */
+  public buchholz(player: PlayerId, round: number): number {
+    const opponents = this.results.getAll(player, round).map((result) => {
+      return isPaired(result) ? result.opponent : null
+    })
+    const opponentScores = opponents.map((opponent) => {
+      // TODO: adjust for unplayed games
+      return opponent ? this.score(opponent, round) : 0
+    })
+    return this.sum(opponentScores)
   }
 
   private sum(nums: number[]): number {
@@ -121,25 +137,6 @@ export class Ranking {
     }
   }
 
-  private pointsForScore(score: Score): number {
-    switch (score) {
-      case '0':
-        return 0
-      case '0.5':
-        return 0.5
-      case '1':
-        return 1
-      case '-':
-        return 0
-      case '+':
-        return 1
-    }
-  }
-
-  private isBye(score: Score): boolean {
-    return score == '+' || score == '-'
-  }
-
 }
 */
 
@@ -156,7 +153,11 @@ interface PlayerPairing {
 /**
  * A round's result from the view of the player.
  */
-type PlayerResult = PlayerPairing | "allocated-bye" | "half-point-bye"
+type PlayerResult = PlayerPairing | "allocated-bye" | "half-point-bye" | "unpaired"
+
+function isPaired(result: PlayerResult): result is PlayerPairing {
+  return typeof result === "object"
+}
 
 /**
  * Lookup map for results for a specific player.
@@ -202,8 +203,8 @@ class ResultMap {
   /**
    * Returns the result for the given player and round.
    */
-  public get(playerId: PlayerId, round: number): PlayerResult | null {
-    return this.pairings.get(playerId)?.get(round) ?? null
+  public get(playerId: PlayerId, round: number): PlayerResult {
+    return this.pairings.get(playerId)?.get(round) ?? "unpaired"
   }
 
   /**
@@ -211,7 +212,7 @@ class ResultMap {
    * array will be the same as the round number, with null values for rounds where the
    * player was not paired and did not receive a bye.
    */
-  public getAll(playerId: PlayerId, maxRound: number): (PlayerResult | null)[] {
+  public getAll(playerId: PlayerId, maxRound: number): PlayerResult[] {
     return Array.from(Array(maxRound).keys()).map((round) => this.get(playerId, round + 1))
   }
 }

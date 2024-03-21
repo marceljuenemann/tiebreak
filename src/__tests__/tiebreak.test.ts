@@ -6,15 +6,16 @@ import { PlayerId, RoundResults, Score } from "../results.js"
 describe("TiebreakCalculation", () => {
   describe("score", () => {
     it("should sum score of all pairings", () => {
-      const tiebreak = new TiebreakCalculation(
-        [
-          round(1, ["A:B 1:0"]),
-          round(2, ["C:A 0:1 forfeit"]),
-          round(3, ["C:B 0.5:0.5"]),
-          round(4, ["B:A 1:0 forfeit"]),
-        ],
-        { unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE },
-      )
+      const results = [
+        round(1, ["A:B 1:0"]),
+        round(2, ["C:A 0:1 forfeit"]),
+        round(3, ["C:B 0.5:0.5"]),
+        round(4, ["B:A 1:0 forfeit"]),
+      ]
+
+      const tiebreak = new TiebreakCalculation(results, {
+        unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
+      })
       expect(tiebreak.score("A", 1)).toEqual(1)
       expect(tiebreak.score("A", 2)).toEqual(2)
       expect(tiebreak.score("A", 3)).toEqual(2)
@@ -43,6 +44,32 @@ describe("TiebreakCalculation", () => {
       expect(tiebreak.score("A", 3)).toEqual(1.5)
     })
   })
+
+  describe("buchholz", () => {
+    describe("without unplayed rounds adjustment", () => {
+      // TODO: test byes
+      it("should sum points of opponents", () => {
+        const rounds = [
+          round(1, ["A:B 1:0"]),
+          round(2, ["C:A 0.5:0.5"]),
+          round(3, ["B:A 0:1 forfeit"]),
+        ]
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
+        })
+
+        expect(tiebreak.buchholz("A", 1)).toEqual(0)
+        expect(tiebreak.buchholz("B", 1)).toEqual(1)
+        expect(tiebreak.buchholz("C", 1)).toEqual(0)
+        expect(tiebreak.buchholz("A", 2)).toEqual(0 + 0.5)
+        expect(tiebreak.buchholz("B", 2)).toEqual(1.5)
+        expect(tiebreak.buchholz("C", 2)).toEqual(1.5)
+        expect(tiebreak.buchholz("A", 3)).toEqual(0 + 0.5)
+        expect(tiebreak.buchholz("B", 3)).toEqual(2 * 2.5)
+        expect(tiebreak.buchholz("C", 3)).toEqual(2.5)
+      })
+    })
+  })
 })
 
 /**
@@ -52,12 +79,14 @@ function round(round: number, pairings: string[]): RoundResults {
   return {
     round,
     pairings: pairings.map((pairing) => {
-      const [white, black, scoreWhite, scoreBlack, forfeited] = pairing.replace(":", " ").split(" ")
+      const [white, black, scoreWhite, scoreBlack, forfeited] = pairing
+        .replaceAll(":", " ")
+        .split(" ")
       return {
         white,
         black,
-        scoreWhite: Number(scoreWhite) as Score,
-        scoreBlack: Number(scoreBlack) as Score,
+        scoreWhite: parseFloat(scoreWhite) as Score,
+        scoreBlack: parseFloat(scoreBlack) as Score,
         forfeited: !!forfeited,
       }
     }),
@@ -69,27 +98,6 @@ import { Ranking, TieBreak } from './ranking';
 
 fdescribe('Ranking', () => {
   
-
-  describe('buchholz', () => {
-    describe('classic', () => {
-      it('should sum points of opponents', () => {
-        const ranking = new Ranking([
-          { round: 1, white: 'A', black: 'B', scoreWhite: '1', scoreBlack: '0' },
-          { round: 2, white: 'C', black: 'A', scoreWhite: '0.5', scoreBlack: '0.5' },
-          { round: 3, white: 'B', black: 'A', scoreWhite: '-', scoreBlack: '+' },
-        ])
-
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'A', 1)).toEqual(0)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'B', 1)).toEqual(1)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'C', 1)).toEqual(0)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'A', 2)).toEqual(0 + 0.5)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'B', 2)).toEqual(1.5)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'C', 2)).toEqual(1.5)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'A', 3)).toEqual(0 + 0.5)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'B', 3)).toEqual(2 * 2.5)
-        expect(ranking.tieBreak(TieBreak.BuchholzClassic, 'C', 3)).toEqual(2.5)
-      })
-    })
 
     describe('2009', () => {
       it('should count any unplayed games of opponents as draw', () => {
