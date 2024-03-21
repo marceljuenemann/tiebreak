@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { RoundResults, Score } from "../results.js"
 import { TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
-import { PlayerId, RoundResults, Score } from "../results.js"
 
 describe("TiebreakCalculation", () => {
   describe("score", () => {
@@ -96,7 +96,7 @@ function round(round: number, pairings: string[]): RoundResults {
 /*
 import { Ranking, TieBreak } from './ranking';
 
-fdescribe('Ranking', () => {
+describe('Ranking', () => {
   
 
     describe('2009', () => {

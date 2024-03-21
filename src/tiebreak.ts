@@ -84,8 +84,8 @@ export class TiebreakCalculation {
     return this.sum(opponentScores)
   }
 
-  private sum(nums: number[]): number {
-    return nums.reduce((prev, curr) => prev + curr, 0)
+  private sum(numbers: number[]): number {
+    return numbers.reduce((prev, curr) => prev + curr, 0)
   }
 }
 
