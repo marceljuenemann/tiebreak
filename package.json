@@ -1,16 +1,17 @@
 {
   "name": "tiebreak",
   "version": "0.1.0",
-  "description": "Calculation of chess tournament tiebreaks complient with FIDE rules",
+  "description": "Calculation of chess tournament tiebreaks compliant with FIDE regulations",
   "keywords": [
     "chess",
     "fide",
     "tiebreak",
-    "ranking"
+    "ranking",
+    "buchholz"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/marceljuenemann/tiebreak.git"
+    "url": "git+https://github.com/marceljuenemann/tiebreak.git"
   },
   "author": {
     "name": "Marcel Juenemann",
@@ -18,8 +19,8 @@
     "url": "https://marcel.world/"
   },
   "type": "module",
-  "exports": "./build/supabase-replication.js",
-  "types": "./build/src/supabase-replication.d.ts",
+  "exports": "./build/index.js",
+  "types": "./build/src/index.d.ts",
   "license": "MIT",
   "engines": {
     "node": "^18.15.0",
@@ -67,7 +68,7 @@
     "nyc": "^15.1.0",
     "prettier": "^3.0.2",
     "source-map-support": "^0.5.21",
-    "tsx": "^3.12.7",
+    "tsx": "^4.7.1",
     "typescript": "^5.1.6",
     "vitest": "^0.34.1"
   }
