@@ -19,7 +19,7 @@ async function build() {
     ...baseConfig,
     outdir: path.join(__dirname, "../build"),
     entryPoints: [
-      path.join(__dirname, "../src/tiebreak.ts")
+      path.join(__dirname, "../src/index.ts")
     ],
   });
 }
