@@ -1,2 +1,2 @@
-export * from './results.js'
-export * from './tiebreak.js'
+export * from "./results.js"
+export * from "./tiebreak.js"

@@ -3,28 +3,58 @@ import { describe, expect, it } from "vitest"
 import { TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
 
 describe("TiebreakCalculation", () => {
-  describe('score', () => {
-    // TODO: Support half-point byes
-    it('should sum score of all pairings', () => {
-      const tiebreak = new TiebreakCalculation([
-        { round: 1, pairings: [{ white: 'A', black: 'B', scoreWhite: 1, scoreBlack: 0, forfeited: false }] },
-        { round: 2, pairings: [{ white: 'C', black: 'A', scoreWhite: 0, scoreBlack: 1, forfeited: true }] },
-        { round: 3, pairings: [{ white: 'C', black: 'B', scoreWhite: 0.5, scoreBlack: 0.5, forfeited: false }] },
-        { round: 4, pairings: [{ white: 'B', black: 'A', scoreWhite: 1, scoreBlack: 0, forfeited: true }] },
-      ], { unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE })
+  describe("score", () => {
+    it("should sum score of all pairings", () => {
+      const tiebreak = new TiebreakCalculation(
+        [
+          {
+            round: 1,
+            pairings: [{ white: "A", black: "B", scoreWhite: 1, scoreBlack: 0, forfeited: false }],
+          },
+          {
+            round: 2,
+            pairings: [{ white: "C", black: "A", scoreWhite: 0, scoreBlack: 1, forfeited: true }],
+          },
+          {
+            round: 3,
+            pairings: [
+              { white: "C", black: "B", scoreWhite: 0.5, scoreBlack: 0.5, forfeited: false },
+            ],
+          },
+          {
+            round: 4,
+            pairings: [{ white: "B", black: "A", scoreWhite: 1, scoreBlack: 0, forfeited: true }],
+          },
+        ],
+        { unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE },
+      )
 
-      expect(tiebreak.score('A', 1)).toEqual(1)
-      expect(tiebreak.score('A', 2)).toEqual(2)
-      expect(tiebreak.score('A', 3)).toEqual(2)
-      expect(tiebreak.score('A', 4)).toEqual(2)
-      expect(tiebreak.score('B', 1)).toEqual(0)
-      expect(tiebreak.score('B', 2)).toEqual(0)
-      expect(tiebreak.score('B', 3)).toEqual(0.5)
-      expect(tiebreak.score('B', 4)).toEqual(1.5)
-      expect(tiebreak.score('C', 1)).toEqual(0)
-      expect(tiebreak.score('C', 2)).toEqual(0)
-      expect(tiebreak.score('C', 3)).toEqual(0.5)
-      expect(tiebreak.score('C', 4)).toEqual(0.5)
+      expect(tiebreak.score("A", 1)).toEqual(1)
+      expect(tiebreak.score("A", 2)).toEqual(2)
+      expect(tiebreak.score("A", 3)).toEqual(2)
+      expect(tiebreak.score("A", 4)).toEqual(2)
+      expect(tiebreak.score("B", 1)).toEqual(0)
+      expect(tiebreak.score("B", 2)).toEqual(0)
+      expect(tiebreak.score("B", 3)).toEqual(0.5)
+      expect(tiebreak.score("B", 4)).toEqual(1.5)
+      expect(tiebreak.score("C", 1)).toEqual(0)
+      expect(tiebreak.score("C", 2)).toEqual(0)
+      expect(tiebreak.score("C", 3)).toEqual(0.5)
+      expect(tiebreak.score("C", 4)).toEqual(0.5)
+    })
+
+    it("should score byes correctly", () => {
+      const tiebreak = new TiebreakCalculation(
+        [
+          { round: 1, pairings: [], pairingAllocatedByes: ["A"] },
+          { round: 2, pairings: [], halfPointByes: ["A"] },
+        ],
+        { unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE },
+      )
+
+      expect(tiebreak.score("A", 1)).toEqual(1)
+      expect(tiebreak.score("A", 2)).toEqual(1.5)
+      expect(tiebreak.score("A", 3)).toEqual(1.5)
     })
   })
 })

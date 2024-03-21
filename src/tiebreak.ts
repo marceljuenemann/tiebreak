@@ -42,7 +42,10 @@ export type TiebreakConfig = {
 export class TiebreakCalculation {
   private results: ResultMap
 
-  constructor(results: RoundResults[], private config: TiebreakConfig) {
+  constructor(
+    results: RoundResults[],
+    private config: TiebreakConfig,
+  ) {
     this.results = new ResultMap(results)
   }
 
@@ -50,17 +53,19 @@ export class TiebreakCalculation {
    * Returns the total points the given player scored by the given round.
    */
   public score(player: PlayerId, round: number): number {
-    return this.sum(this.results.getAll(player, round).map(result => {
-      if (result === null) {
-        return 0
-      } else if (result === 'allocated-bye') {
-        return 1
-      } else if (result === 'half-point-bye') {
-        return 0.5
-      } else {
-        return result.score
-      }
-    }))
+    return this.sum(
+      this.results.getAll(player, round).map((result) => {
+        if (result === null) {
+          return 0
+        } else if (result === "allocated-bye") {
+          return 1
+        } else if (result === "half-point-bye") {
+          return 0.5
+        } else {
+          return result.score
+        }
+      }),
+    )
   }
 
   private sum(nums: number[]): number {
@@ -138,7 +143,6 @@ export class Ranking {
 }
 */
 
-
 /**
  * Pairing from the view of the player.
  */
@@ -152,7 +156,7 @@ interface PlayerPairing {
 /**
  * A round's result from the view of the player.
  */
-type PlayerResult = PlayerPairing | 'allocated-bye' | 'half-point-bye'
+type PlayerResult = PlayerPairing | "allocated-bye" | "half-point-bye"
 
 /**
  * Lookup map for results for a specific player.
@@ -162,21 +166,26 @@ class ResultMap {
 
   constructor(results: RoundResults[]) {
     for (const round of results) {
-      for (let pairing of round.pairings) {
+      for (const pairing of round.pairings) {
         this.addToMap(pairing.white, round.round, {
           score: pairing.scoreWhite,
           opponentScore: pairing.scoreBlack,
           opponent: pairing.black,
-          forfeited: pairing.forfeited
+          forfeited: pairing.forfeited,
         })
         this.addToMap(pairing.black, round.round, {
           score: pairing.scoreBlack,
           opponentScore: pairing.scoreWhite,
           opponent: pairing.white,
-          forfeited: pairing.forfeited
+          forfeited: pairing.forfeited,
         })
       }
-      // TODO: Handle byes
+      for (const player of round.pairingAllocatedByes ?? []) {
+        this.addToMap(player, round.round, "allocated-bye")
+      }
+      for (const player of round.halfPointByes ?? []) {
+        this.addToMap(player, round.round, "half-point-bye")
+      }
     }
   }
 
@@ -203,6 +212,6 @@ class ResultMap {
    * player was not paired and did not receive a bye.
    */
   public getAll(playerId: PlayerId, maxRound: number): (PlayerResult | null)[] {
-    return Array.from(Array(maxRound).keys()).map(round => this.get(playerId, round + 1))
+    return Array.from(Array(maxRound).keys()).map((round) => this.get(playerId, round + 1))
   }
 }
