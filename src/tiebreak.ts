@@ -55,16 +55,39 @@ export class TiebreakCalculation {
    * Returns the total points the given player scored by the given round.
    */
   public score(player: PlayerId, round: number): number {
+    return this.sum(this.results.getAll(player, round).map((result) => {
+      return this.scoreForResult(result)
+    }))
+  }
+
+  private scoreForResult(result: PlayerResult): number {
+    switch (result) {
+      case "unpaired":
+        return 0
+      case "allocated-bye":
+        return 1
+      case "half-point-bye":
+        return 0.5
+      default:
+        return result.score
+    }
+  }
+
+  /**
+   * Returns the players score with unplayed rounds adjusted according to the configured UnplayedRoundsAdjustment.
+   */
+  public adjustedScore(player: PlayerId, round: number): number {
+    if (this.config.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.NONE) {
+      return this.score(player, round)
+    }
     const rounds = this.results.getAll(player, round).map((result) => {
       switch (result) {
         case "unpaired":
-          return 0
         case "allocated-bye":
-          return 1
         case "half-point-bye":
           return 0.5
         default:
-          return result.score
+          return result.forfeited ? 0.5 : result.score
       }
     })
     return this.sum(rounds)
@@ -74,12 +97,24 @@ export class TiebreakCalculation {
    * Buchholz score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
    */
   public buchholz(player: PlayerId, round: number): number {
-    const opponents = this.results.getAll(player, round).map((result) => {
-      return isPaired(result) ? result.opponent : null
-    })
-    const opponentScores = opponents.map((opponent) => {
-      // TODO: adjust for unplayed games
-      return opponent ? this.score(opponent, round) : 0
+    const opponentScores = this.results.getAll(player, round).map((result, index) => {
+      const currentRound = index + 1
+      switch (this.config.unplayedRoundsAdjustment) {
+        case UnplayedRoundsAdjustment.NONE:
+          return isPaired(result) ? this.adjustedScore(result.opponent, round) : 0
+
+        case UnplayedRoundsAdjustment.FIDE_2009:
+        case UnplayedRoundsAdjustment.FIDE_LATEST:
+          if (isPlayed(result)) {
+            return this.adjustedScore(result.opponent, round)
+          } else {
+            // Use a virtual opponent.
+            const initialScore = this.score(player, currentRound - 1)
+            const gameScore = 1 - this.scoreForResult(result)
+            const virtualPoints = (round - currentRound) * 0.5
+            return initialScore + gameScore + virtualPoints
+          }
+      }
     })
     return this.sum(opponentScores)
   }
@@ -88,57 +123,6 @@ export class TiebreakCalculation {
     return numbers.reduce((prev, curr) => prev + curr, 0)
   }
 }
-
-/*
-export class Ranking {
-  private pairings: PairingMap
-
-  constructor(pairings: Pairing[]) {
-    this.pairings = new PairingMap(pairings)
-  }
-
-  tieBreak(tieBreak: TieBreak | InternalScore, playerId: PlayerId, round: number): number {
-    switch (tieBreak) {
-      case TieBreak.Points:
-        return this.sum(this.pairings.getAll(playerId, round).map(pairing => {
-          return this.pointsForScore(pairing.score)
-        }))
-
-      case TieBreak.BuchholzClassic:
-        return this.sum(this.pairings.getAll(playerId, round).map(pairing => {
-          return this.tieBreak(TieBreak.Points, pairing.opponent, round)
-        }))
-
-      case TieBreak.Buchholz2009:
-        let sum = 0.0
-        for (let r = 1; r <= round; r++) {
-          const pairing = this.pairings.get(playerId, r)
-          if (pairing && !this.isBye(pairing.score)) {
-            // Actually played game, add opponent's points (adjusted for unplayed games)
-            sum += this.tieBreak(InternalScore.BuchholzForOpponent, pairing.opponent, round)
-          } else {
-            // Score Buchholz using a virtual opponent.
-            const initialPoints = this.tieBreak(TieBreak.Points, playerId, r - 1)
-            const gamePoints = pairing && pairing.score == '+' ? 0 : 1
-            const virtualPoints = (round - r) * 0.5
-            sum += initialPoints + gamePoints + virtualPoints
-          }
-        }
-        return sum
-
-      case InternalScore.BuchholzForOpponent:
-        // Any unplayed games are counted as 0.5, whether the player was paired or not.
-        const played = this.pairings.getAll(playerId, round).filter(pairing => {
-          return !this.isBye(pairing.score)
-        })
-        const playedSum = this.sum(played.map(pairing => this.pointsForScore(pairing.score)))
-        const unplayedSum = (round - played.length) * 0.5
-        return playedSum + unplayedSum
-    }
-  }
-
-}
-*/
 
 /**
  * Pairing from the view of the player.
@@ -157,6 +141,10 @@ type PlayerResult = PlayerPairing | "allocated-bye" | "half-point-bye" | "unpair
 
 function isPaired(result: PlayerResult): result is PlayerPairing {
   return typeof result === "object"
+}
+
+function isPlayed(result: PlayerResult): result is PlayerPairing {
+  return isPaired(result) && !result.forfeited
 }
 
 /**

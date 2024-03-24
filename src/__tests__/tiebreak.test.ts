@@ -69,6 +69,45 @@ describe("TiebreakCalculation", () => {
         expect(tiebreak.buchholz("C", 3)).toEqual(2.5)
       })
     })
+
+    describe('with FIDE_2009 unplayed rounds adjustment', () => {
+      // TODO: byes
+      it('should count any unplayed games of opponents as draw', () => {
+        const rounds = [
+          round(1, ['A:B 1:0', 'C:Cx 1:0', 'D:Dx 1:0', 'E:Ex 1:0']),
+          round(2, ['B:X 1:0 forfeit', 'A:C 1:0', 'D:Dy 1:0', 'E:Ey 1:0']),
+          round(3, ['A:D 1:0', 'C:Cy 1:0', 'E:Ez 1:0']),
+          round(4, ['B:Y 0:1 forfeit', 'A:E 1:0', 'C:Cz 1:0', 'D:Dz 1:0']),
+        ]
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2009,
+        })
+
+        expect(tiebreak.buchholz('A', 1)).toEqual(0)
+        expect(tiebreak.buchholz('A', 2)).toEqual(1 * 0.5 + 1 * 1)
+        expect(tiebreak.buchholz('A', 3)).toEqual(2 * 0.5 + 2 * 2)
+        expect(tiebreak.buchholz('A', 4)).toEqual(3 * 0.5 + 3 * 3)
+      })
+
+      it('should use virtual opponents for unplayed games', () => {
+        const rounds = [
+          round(1, ['A:B 1:0']),
+          round(2, ['A:B 1:0 forfeit']),
+        ]
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2009,
+        })
+
+        // A's first opponent contributes (0 + 0.5) and the second (1 + 0)
+        expect(tiebreak.buchholz('A', 2)).toEqual(0.5 + 1)
+        // B's first opponent contributes (1 + 0.5) and the second (0 + 1)
+        expect(tiebreak.buchholz('B', 2)).toEqual(1.5 + 1)
+
+        // Round 3 (neither A nor B paired)
+        expect(tiebreak.buchholz('A', 3)).toEqual((0 + 2 * 0.5) + (1 + 0 + 0.5) + (2 + 1))
+        expect(tiebreak.buchholz('B', 3)).toEqual((1 + 2 * 0.5) + (0 + 1 + 0.5) + (0 + 1))
+      })
+    })
   })
 })
 
@@ -89,61 +128,6 @@ function round(round: number, pairings: string[]): RoundResults {
         scoreBlack: parseFloat(scoreBlack) as Score,
         forfeited: !!forfeited,
       }
-    }),
+    })
   }
 }
-
-/*
-import { Ranking, TieBreak } from './ranking';
-
-describe('Ranking', () => {
-  
-
-    describe('2009', () => {
-      it('should count any unplayed games of opponents as draw', () => {
-        const ranking = new Ranking([
-          // B is our opponent with unplayed games.
-          { round: 1, white: 'A', black: 'B', scoreWhite: '1', scoreBlack: '0' },
-          { round: 2, white: 'B', black: 'X', scoreWhite: '+', scoreBlack: '-' },
-          // Not paired in round 3. Should still count as draw.
-          { round: 4, white: 'B', black: 'Y', scoreWhite: '-', scoreBlack: '+' },
-          // A and A's other opponents played all games.
-          { round: 2, white: 'A', black: 'C', scoreWhite: '1', scoreBlack: '0' },
-          { round: 3, white: 'A', black: 'D', scoreWhite: '1', scoreBlack: '0' },
-          { round: 4, white: 'A', black: 'E', scoreWhite: '1', scoreBlack: '0' },
-          { round: 1, white: 'C', black: 'Cx', scoreWhite: '1', scoreBlack: '0' },
-          { round: 3, white: 'C', black: 'Cy', scoreWhite: '1', scoreBlack: '0' },
-          { round: 4, white: 'C', black: 'Cz', scoreWhite: '1', scoreBlack: '0' },
-          { round: 1, white: 'D', black: 'Dx', scoreWhite: '1', scoreBlack: '0' },
-          { round: 2, white: 'D', black: 'Dy', scoreWhite: '1', scoreBlack: '0' },
-          { round: 4, white: 'D', black: 'Dz', scoreWhite: '1', scoreBlack: '0' },
-          { round: 1, white: 'E', black: 'Ex', scoreWhite: '1', scoreBlack: '0' },
-          { round: 2, white: 'E', black: 'Ey', scoreWhite: '1', scoreBlack: '0' },
-          { round: 3, white: 'E', black: 'Ez', scoreWhite: '1', scoreBlack: '0' },
-        ])
-
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'A', 1)).toEqual(0)
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'A', 2)).toEqual(1 * 0.5 + 1 * 1)
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'A', 3)).toEqual(2 * 0.5 + 2 * 2)
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'A', 4)).toEqual(3 * 0.5 + 3 * 3)
-      })
-
-      fit('should use virtual opponents for unplayed games', () => {
-        const ranking = new Ranking([
-          { round: 1, white: 'A', black: 'B', scoreWhite: '1', scoreBlack: '0' },
-          { round: 2, white: 'A', black: 'B', scoreWhite: '+', scoreBlack: '-' },
-        ])
-
-        // A's first opponent contributes (0 + 0.5) and the second (1 + 0)
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'A', 2)).toEqual(0.5 + 1)
-        // B's first opponent contributes (1 + 0.5) and the second (0 + 1)
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'B', 2)).toEqual(1.5 + 1)
-
-        // Round 3 (neither A nor B paired)
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'A', 3)).toEqual((0 + 2 * 0.5) + (1 + 0 + 0.5) + (2 + 1))
-        expect(ranking.tieBreak(TieBreak.Buchholz2009, 'B', 3)).toEqual((1 + 2 * 0.5) + (0 + 1 + 0.5) + (0 + 1))
-      })
-    })
-  })
-})
-*/
