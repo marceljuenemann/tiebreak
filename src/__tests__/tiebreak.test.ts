@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { RoundResults, Score } from "../results.js"
 import { TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
+import { readTestCases } from "./util/test-case-reader.js"
 
 describe("TiebreakCalculation", () => {
   describe("score", () => {
@@ -67,6 +68,14 @@ describe("TiebreakCalculation", () => {
         expect(tiebreak.buchholz("A", 3)).toEqual(0 + 0.5)
         expect(tiebreak.buchholz("B", 3)).toEqual(2 * 2.5)
         expect(tiebreak.buchholz("C", 3)).toEqual(2.5)
+      })
+
+      it("should pass fide-exercise-2023-01", async () => {
+        const rounds = await readTestCases("fide-exercise-2023-01")
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
+        })
+        expect(tiebreak.buchholz('2', 5)).toEqual(13)
       })
     })
 
