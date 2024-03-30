@@ -17,7 +17,7 @@ export enum UnplayedRoundsAdjustment {
   FIDE_LATEST = "FIDE_LATEST",
 
   // TODO
-  // FIDE_2023 = "FIDE_2023",
+  FIDE_2023 = "FIDE_2023",
 
   /**
    * Adjustments according to FIDE regulations from 2009. If you had opponents who had
@@ -77,20 +77,14 @@ export class TiebreakCalculation {
    * Returns the players score with unplayed rounds adjusted according to the configured UnplayedRoundsAdjustment.
    */
   public adjustedScore(player: PlayerId, round: number): number {
-    if (this.config.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.NONE) {
-      return this.score(player, round)
+    if (this.config.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.FIDE_2009) {
+      // All unplayed rounds are counted as 0.5 points.
+      return this.sum(this.results.getAll(player, round).map((result) => {
+        return isPlayed(result) ? result.score : 0.5
+      }))
     }
-    const rounds = this.results.getAll(player, round).map((result) => {
-      switch (result) {
-        case "unpaired":
-        case "allocated-bye":
-        case "half-point-bye":
-          return 0.5
-        default:
-          return result.forfeited ? 0.5 : result.score
-      }
-    })
-    return this.sum(rounds)
+    // TODO: FIDE_2023 adjustments.
+    return this.score(player, round)
   }
 
   /**
@@ -103,8 +97,16 @@ export class TiebreakCalculation {
         case UnplayedRoundsAdjustment.NONE:
           return isPaired(result) ? this.adjustedScore(result.opponent, round) : 0
 
-        case UnplayedRoundsAdjustment.FIDE_2009:
         case UnplayedRoundsAdjustment.FIDE_LATEST:
+        case UnplayedRoundsAdjustment.FIDE_2023:
+          if (isPlayed(result)) {
+            return this.adjustedScore(result.opponent, round)
+          } else {
+            // Use a dummy opponent with same score.
+            return this.score(player, round)
+          }
+
+        case UnplayedRoundsAdjustment.FIDE_2009:
           if (isPlayed(result)) {
             return this.adjustedScore(result.opponent, round)
           } else {
@@ -201,6 +203,6 @@ class ResultMap {
    * player was not paired and did not receive a bye.
    */
   public getAll(playerId: PlayerId, maxRound: number): PlayerResult[] {
-    return Array.from(Array(maxRound).keys()).map((round) => this.get(playerId, round + 1))
+    return Array.from(Array(maxRound).keys()).map((i) => this.get(playerId, i + 1))
   }
 }

@@ -98,6 +98,36 @@ describe("TiebreakCalculation", () => {
       })
     })
 
+    describe('with FIDE_2023 unplayed rounds adjustment', () => {
+
+      it("should pass FIDE exercise 1 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
+        })
+        expect(tiebreak.buchholz('2', 5)).toEqual(13)
+      })
+
+      it("should pass FIDE exercise 2 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
+        })
+        expect(tiebreak.buchholz('1', 5)).toEqual(12.5)
+        expect(tiebreak.buchholz('3', 5)).toEqual(15.5)
+      })
+
+      it("should pass FIDE exercise 3 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
+        })
+        expect(tiebreak.buchholz('5', 5)).toEqual(8.5)
+        expect(tiebreak.buchholz('8', 5)).toEqual(13.5)
+        expect(tiebreak.buchholz('11', 5)).toEqual(13.5)
+      })
+    })
+
     describe('with FIDE_2009 unplayed rounds adjustment', () => {
       // TODO: byes
       it('should count any unplayed games of opponents as draw', () => {
