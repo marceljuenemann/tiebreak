@@ -13,27 +13,35 @@ export async function readTestCases(filename: string): Promise<RoundResults[]> {
 function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
   const roundResults: RoundResults[] = []
   for (let round = 1; round in data[0]; round++) {
-    const roundResult: RoundResults = { round, pairings: [] }
+    const roundResult: RoundResults = { round, pairings: [], pairingAllocatedByes: [], halfPointByes: [] }
     const players = new Set<string>()
 
     for (const row of data) {
       const playerId = row['#']
 
-      // +B10
+      // Parse result, e.g. +B10, =BYE, -F11
       const info = row[round]
       const score = {'+': 1, '=': 0.5, '-': 0}[info[0]]
-      const color = info[1] as 'W' | 'B'
-      const opponentId = info.substring(2)
-
-      if (!players.has(opponentId)) {
-        roundResult.pairings.push({ 
-          white: color === 'W' ? playerId : opponentId,
-          black: color === 'B' ? playerId : opponentId,
-          scoreWhite: (color === 'W' ? score : 1 - score) as Score,
-          scoreBlack: (color === 'B' ? score : 1 - score) as Score,
-          // TODO: support forfeits
-          forfeited: false
-        })
+      if (info.substring(1) === 'BYE') {
+        if (score == 1) {
+          roundResult.pairingAllocatedByes?.push(playerId)
+        } else if (score == 0.5) {
+          roundResult.halfPointByes?.push(playerId)
+        }
+      } else {
+        const color = info[1] as 'W' | 'B' | 'F'
+        const opponentId = info.substring(2)
+  
+        if (!players.has(opponentId)) {
+          roundResult.pairings.push({ 
+            white: color === 'W' ? playerId : opponentId,
+            black: color !== 'W' ? playerId : opponentId,
+            scoreWhite: (color === 'W' ? score : 1 - score) as Score,
+            scoreBlack: (color !== 'W' ? score : 1 - score) as Score,
+            // TODO: support forfeits
+            forfeited: color === 'F'
+          })
+        }
       }
       players.add(playerId)
     }
