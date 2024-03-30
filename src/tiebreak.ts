@@ -16,7 +16,13 @@ export enum UnplayedRoundsAdjustment {
    */
   FIDE_LATEST = "FIDE_LATEST",
 
-  // TODO
+  /**
+   * For the most part, the 2023 regulations treat unplayed rounds the same as played rounds,
+   * e.g. Buchholz is usually just the sum of the opponent's score. However, opponent's who
+   * withdrew from a tournament will have their score adjusted by counting all rounds after the
+   * withdrawal as 0.5 points. In addition, the player's own unplayed rounds are counted as a
+   * game against an opponent that scored the same number of points at the end of the tournament.
+   */
   FIDE_2023 = "FIDE_2023",
 
   /**
@@ -77,14 +83,37 @@ export class TiebreakCalculation {
    * Returns the players score with unplayed rounds adjusted according to the configured UnplayedRoundsAdjustment.
    */
   public adjustedScore(player: PlayerId, round: number): number {
-    if (this.config.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.FIDE_2009) {
-      // All unplayed rounds are counted as 0.5 points.
-      return this.sum(this.results.getAll(player, round).map((result) => {
-        return isPlayed(result) ? result.score : 0.5
-      }))
+    switch (this.config.unplayedRoundsAdjustment) {
+      case UnplayedRoundsAdjustment.NONE:
+        return this.score(player, round)
+
+      case UnplayedRoundsAdjustment.FIDE_LATEST:
+      case UnplayedRoundsAdjustment.FIDE_2023:
+        // For the most part, the adjusted score is the same as the normal score, i.e. unplayed rounds are
+        // counted according to the points they scored. However, after a player withdrew (i.e. no later rounds
+        // where they were available to play), all rounds are counted as 0.5.
+        const lastAvailableToPlayRound = this.lastAvailableToPlayRound(player, round)
+        return this.score(player, lastAvailableToPlayRound) + (round - lastAvailableToPlayRound) * 0.5
+        
+      case UnplayedRoundsAdjustment.FIDE_2009:
+        // All unplayed rounds are counted as 0.5 points.
+        return this.sum(this.results.getAll(player, round).map((result) => {
+          return isPlayed(result) ? result.score : 0.5
+        }))
     }
-    // TODO: FIDE_2023 adjustments.
-    return this.score(player, round)
+  }
+
+  /**
+   * Returns the highest round number in which the player was "available to play", i.e. they didn't
+   * voluntarily not play the round. Returns 0 if the player was never available to play. 
+   */
+  private lastAvailableToPlayRound(player: PlayerId, maxRound: number) {
+    for (let round = maxRound; round >= 1; round--) {
+      if (!isVoluntarilyUnplayedRound(this.results.get(player, round))) {
+        return round
+      }
+    }
+    return 0
   }
 
   /**
@@ -147,6 +176,18 @@ function isPaired(result: PlayerResult): result is PlayerPairing {
 
 function isPlayed(result: PlayerResult): result is PlayerPairing {
   return isPaired(result) && !result.forfeited
+}
+
+function isForfeitLoss(result: PlayerResult): boolean {
+  return isPaired(result) && result.forfeited && result.score === 0
+}
+
+/**
+ * Voluntarily Unplayed Rounds (VUR) are defined in the FIDE regulations and in some cases
+ * handled differently from rounds in which the player was "available to play".
+ */
+function isVoluntarilyUnplayedRound(result: PlayerResult): boolean {
+  return result === 'unpaired' || result === 'half-point-bye' || isForfeitLoss(result)
 }
 
 /**

@@ -28,10 +28,9 @@ function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
         } else if (score == 0.5) {
           roundResult.halfPointByes?.push(playerId)
         }
-      } else {
+      } else if (info !== '--') {
         const color = info[1] as 'W' | 'B' | 'F'
         const opponentId = info.substring(2)
-  
         if (!players.has(opponentId)) {
           roundResult.pairings.push({ 
             white: color === 'W' ? playerId : opponentId,
