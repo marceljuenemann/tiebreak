@@ -180,7 +180,7 @@ describe("TiebreakCalculation", () => {
   })
 
   describe("buchholz with Cut-1 modifier", () => {
-    describe.skip('with FIDE_2023 unplayed rounds adjustment', () => {
+    describe('with FIDE_2023 unplayed rounds adjustment', () => {
       it("should pass FIDE exercise 5 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
         const tiebreak = new TiebreakCalculation(rounds, {

@@ -65,7 +65,7 @@ export enum Modifier {
 /**
  * Calculates tiebreaks for a tournament with the given results and configuration.
  */
-// TODO: Add caching/memoization to avoid constant recalculation.
+// TODO: Measure performance for large tournaments. Add caching/memoization if needed.
 export class TiebreakCalculation {
   private results: ResultMap
 
@@ -166,7 +166,21 @@ export class TiebreakCalculation {
           }
       }
     })
-    return this.sum(opponentScores)
+    return this.sumWithModifier(opponentScores, modifier)
+  }
+
+  /**
+   * Applies the given modifier to the values (e.g. cutting least signifiant values)
+   * and returns the sum of the remaining values. 
+   */
+  private sumWithModifier(values: number[], modifier?: Modifier): number {
+    values.sort()
+    switch (modifier) {
+      case Modifier.CUT_1:
+        values = values.splice(1)
+        break
+    }
+    return this.sum(values)
   }
 
   private sum(numbers: number[]): number {
