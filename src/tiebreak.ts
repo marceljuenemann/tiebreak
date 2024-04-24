@@ -44,6 +44,25 @@ export type TiebreakConfig = {
 }
 
 /**
+ * Modifiers for tiebreaks that are based on a sum of values, such as Buchholz
+ * and Sonneborn-Berger. These modifiers are defined in the FIDE Tiebreak Regulations,
+ * Article 14.  
+ */
+export enum Modifier {
+  // 14.1 Cut-1: Cut the Least Significant Value
+  CUT_1 = 'Cut-1',
+
+  // 14.2 Cut-2: Cut the two Least Significant Values
+  CUT_2 = 'Cut-2',
+  
+  // 14.3 Median­1: Cut the Least and the Most Significant Values (in that order)
+  MEDIAN_1 = 'Median1',
+
+  // 14.4 Median­2: Cut the two Least and the two Most Significant Values (in that order)
+  MEDIAN_2 = 'Median2'
+}
+
+/**
  * Calculates tiebreaks for a tournament with the given results and configuration.
  */
 // TODO: Add caching/memoization to avoid constant recalculation.
@@ -119,7 +138,7 @@ export class TiebreakCalculation {
   /**
    * Buchholz score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
    */
-  public buchholz(player: PlayerId, round: number): number {
+  public buchholz(player: PlayerId, round: number, modifier?: Modifier): number {
     const opponentScores = this.results.getAll(player, round).map((result, index) => {
       const currentRound = index + 1
       switch (this.config.unplayedRoundsAdjustment) {

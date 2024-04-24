@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { RoundResults, Score } from "../results.js"
-import { TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
+import { Modifier, TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
 import { readTestCases } from "./util/test-case-reader.js"
 
 describe("TiebreakCalculation", () => {
@@ -175,6 +175,20 @@ describe("TiebreakCalculation", () => {
         // Round 3 (neither A nor B paired)
         expect(tiebreak.buchholz('A', 3)).toEqual((0 + 2 * 0.5) + (1 + 0 + 0.5) + (2 + 1))
         expect(tiebreak.buchholz('B', 3)).toEqual((1 + 2 * 0.5) + (0 + 1 + 0.5) + (0 + 1))
+      })
+    })
+  })
+
+  describe("buchholz with Cut-1 modifier", () => {
+    describe.skip('with FIDE_2023 unplayed rounds adjustment', () => {
+      it("should pass FIDE exercise 5 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new TiebreakCalculation(rounds, {
+          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
+        })
+        expect(tiebreak.buchholz('5', 5, Modifier.CUT_1)).toEqual(7.5)
+        expect(tiebreak.buchholz('8', 5, Modifier.CUT_1)).toEqual(12)
+        expect(tiebreak.buchholz('11', 5, Modifier.CUT_1)).toEqual(12)
       })
     })
   })
