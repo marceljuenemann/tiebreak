@@ -9,14 +9,6 @@ export enum UnplayedRoundsAdjustment {
   NONE = "NONE",
 
   /**
-   * Unplayed games are adjusted according to the latest FIDE rules. Keep in mind
-   * that calculations can change as the code is updated, so this setting is not
-   * recommended if you want calculations to be stable over time, e.g. when
-   * calculating tiebreaks for historic tournaments.
-   */
-  FIDE_LATEST = "FIDE_LATEST",
-
-  /**
    * For the most part, the 2023 regulations treat unplayed rounds the same as played rounds,
    * e.g. Buchholz is usually just the sum of the opponent's score. However, opponent's who
    * withdrew from a tournament will have their score adjusted by counting all rounds after the
@@ -103,7 +95,6 @@ export class TiebreakCalculation {
       case UnplayedRoundsAdjustment.NONE:
         return this.score(player, round)
 
-      case UnplayedRoundsAdjustment.FIDE_LATEST:
       case UnplayedRoundsAdjustment.FIDE_2023: {
         // For the most part, the adjusted score is the same as the normal score, i.e. unplayed rounds are
         // counted according to the points they scored. However, after a player withdrew (i.e. no later rounds
@@ -143,7 +134,6 @@ export class TiebreakCalculation {
         case UnplayedRoundsAdjustment.NONE:
           return isPaired(result) ? this.adjustedScore(result.opponent, round) : 0
 
-        case UnplayedRoundsAdjustment.FIDE_LATEST:
         case UnplayedRoundsAdjustment.FIDE_2023:
           if (isPlayed(result)) {
             return this.adjustedScore(result.opponent, round)
