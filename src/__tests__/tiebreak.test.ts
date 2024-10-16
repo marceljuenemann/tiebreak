@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { Results, RoundResults, Score } from "../results.js"
+import { Results, RoundResults, Score, TournamentType } from "../results.js"
 import { Modifier, Tiebreak, Tiebreaker, UnplayedRoundsAdjustment } from "../tiebreak.js"
 import { readTestCases } from "./util/test-case-reader.js"
 
 describe("TiebreakCalculation", () => {
   describe("score", () => {
     it("should sum score of all pairings", () => {
-      const results = new Results([
+      const results = new Results(TournamentType.SWISS, [
         round(["A:B 1:0"]),
         round(["C:A 0:1 forfeit"]),
         round(["C:B 0.5:0.5"]),
@@ -31,7 +31,7 @@ describe("TiebreakCalculation", () => {
 
     it("should score byes correctly", () => {
       const tiebreak = new Tiebreaker(
-        new Results([
+        new Results(TournamentType.SWISS, [
           { pairings: [], pairingAllocatedByes: ["A"] },
           { pairings: [], halfPointByes: ["A"] },
         ]),
@@ -48,7 +48,7 @@ describe("TiebreakCalculation", () => {
     describe("without unplayed rounds adjustment", () => {
       // TODO: test byes
       it("should sum points of opponents", () => {
-        const rounds = new Results([
+        const rounds = new Results(TournamentType.SWISS, [
           round(["A:B 1:0"]),
           round(["C:A 0.5:0.5"]),
           round(["B:A 0:1 forfeit"]),
@@ -123,7 +123,7 @@ describe("TiebreakCalculation", () => {
     describe("with FIDE_2009 unplayed rounds adjustment", () => {
       // TODO: byes
       it("should count any unplayed games of opponents as draw", () => {
-        const rounds = new Results([
+        const rounds = new Results(TournamentType.SWISS, [
           round(["A:B 1:0", "C:Cx 1:0", "D:Dx 1:0", "E:Ex 1:0"]),
           round(["B:X 1:0 forfeit", "A:C 1:0", "D:Dy 1:0", "E:Ey 1:0"]),
           round(["A:D 1:0", "C:Cy 1:0", "E:Ez 1:0"]),
@@ -138,7 +138,7 @@ describe("TiebreakCalculation", () => {
       })
 
       it("should use virtual opponents for unplayed games", () => {
-        const rounds = new Results([round(["A:B 1:0"]), round(["A:B 1:0 forfeit"])])
+        const rounds = new Results(TournamentType.SWISS, [round(["A:B 1:0"]), round(["A:B 1:0 forfeit"])])
         const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2009)
 
         // A's first opponent contributes (0 + 0.5) and the second (1 + 0)
@@ -167,7 +167,7 @@ describe("TiebreakCalculation", () => {
 
   describe("ranking", () => {
     it("should rank simple tournament", () => {
-      const results = new Results([
+      const results = new Results(TournamentType.SWISS, [
         {
           // Round 1: Player D did not show up
           pairings: [
@@ -191,7 +191,7 @@ describe("TiebreakCalculation", () => {
     })
 
     it("should return tied players on the same rank", () => {
-      const results = new Results([
+      const results = new Results(TournamentType.SWISS, [
         {
           // Round 1: Player D did not show up
           pairings: [

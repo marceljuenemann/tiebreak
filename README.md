@@ -32,9 +32,9 @@ Note: Only individual Swiss tournaments are currently supported. Team tournament
 First, you need to create a `Results` object with all relevant pairing information. You can use an arbitrary string or number to identify players.
 
 ```typescript
-import { Results } from "tiebreak"
+import { Results, TournamentType } from "tiebreak"
 
-const results = new Results([
+const results = new Results(TournamentType.SWISS, [
   {
     // Example round 1: Player D did not show up
     pairings: [

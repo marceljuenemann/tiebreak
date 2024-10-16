@@ -36,13 +36,18 @@ export type Pairing = {
   forfeited: boolean
 }
 
+export enum TournamentType {
+  // TODO: Add support for round robin tournaments (where no unplayed games adjustments are made).
+  SWISS = "SWISS"
+}
+
 /**
  * Immutable representation of a tournament's pairings and results.
  */
 export class Results {
   private pairings: Map<PlayerId, Map<number, PlayerResult>> = new Map()
 
-  constructor(results: RoundResults[]) {
+  constructor(public readonly tournamentType: TournamentType, results: RoundResults[]) {
     for (const [roundIndex, roundResults] of results.entries()) {
       for (const pairing of roundResults.pairings) {
         this.addToMap(pairing.white, roundIndex + 1, {
