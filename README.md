@@ -21,7 +21,7 @@ Tiebreak is a TypeScript library for calculating various tournament tiebreak sco
 
 **Built in calculation of entire tournament rankings**
 
-Note: Only individual Swiss tournaments are currently supported. Team tournaments and round robin tournaments are not implemented correctly yet.
+_Note: Only individual Swiss tournaments are currently supported. Team tournaments and round robin tournaments are not implemented correctly yet._
 
 ## Installation
 
@@ -81,6 +81,10 @@ console.log(tiebreaker.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ]))
 - **Extensively tested:** The code should be extensively covered by unit tests.
 - **Opinionated:** The library does not try to implement every possible tie break with every possible configuration. Instead, the focus lies on implementing tie breaks and configurations that make the most sense to use in real tournaments.
 
+## Release Notes
+
+See https://github.com/marceljuenemann/tiebreak/releases
+
 ## Development
 
 - Build: `npm run build`
@@ -93,7 +97,7 @@ console.log(tiebreaker.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ]))
 **Deployment procedure:**
 
 - Increase version
-- Update CHANGELOG (or create it)
 - Push to main and ensure all workflows are passing
 - `npm run build`
 - `npm publish`
+- Create release on GitHub with release notes
