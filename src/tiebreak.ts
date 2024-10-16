@@ -1,4 +1,4 @@
-import { PlayerId, RoundResults, Score } from "./results.js"
+import { PlayerId, PlayerResult, Results, isPaired, isPlayed, isVoluntarilyUnplayedRound } from "./results.js"
 
 export enum UnplayedRoundsAdjustment {
   /**
@@ -67,14 +67,10 @@ export enum Modifier {
  */
 // TODO: Measure performance for large tournaments. Add caching/memoization if needed.
 export class TiebreakCalculation {
-  private results: ResultMap
-
   constructor(
-    results: RoundResults[],
+    private results: Results,
     private config: TiebreakConfig,
-  ) {
-    this.results = new ResultMap(results)
-  }
+  ) {}
 
   /**
    * Returns the total points the given player scored by the given round.
@@ -85,6 +81,7 @@ export class TiebreakCalculation {
     }))
   }
 
+  // TODO: Maybe turn PlayerResult into a class which returns the score?
   private scoreForResult(result: PlayerResult): number {
     switch (result) {
       case "unpaired":
@@ -107,13 +104,14 @@ export class TiebreakCalculation {
         return this.score(player, round)
 
       case UnplayedRoundsAdjustment.FIDE_LATEST:
-      case UnplayedRoundsAdjustment.FIDE_2023:
+      case UnplayedRoundsAdjustment.FIDE_2023: {
         // For the most part, the adjusted score is the same as the normal score, i.e. unplayed rounds are
         // counted according to the points they scored. However, after a player withdrew (i.e. no later rounds
         // where they were available to play), all rounds are counted as 0.5.
         const lastAvailableToPlayRound = this.lastAvailableToPlayRound(player, round)
         return this.score(player, lastAvailableToPlayRound) + (round - lastAvailableToPlayRound) * 0.5
-        
+      }
+
       case UnplayedRoundsAdjustment.FIDE_2009:
         // All unplayed rounds are counted as 0.5 points.
         return this.sum(this.results.getAll(player, round).map((result) => {
@@ -185,98 +183,5 @@ export class TiebreakCalculation {
 
   private sum(numbers: number[]): number {
     return numbers.reduce((prev, curr) => prev + curr, 0)
-  }
-}
-
-/**
- * Pairing from the view of the player.
- */
-interface PlayerPairing {
-  score: Score
-  opponentScore: Score
-  opponent: PlayerId
-  forfeited: boolean
-}
-
-/**
- * A round's result from the view of the player.
- */
-type PlayerResult = PlayerPairing | "allocated-bye" | "half-point-bye" | "unpaired"
-
-function isPaired(result: PlayerResult): result is PlayerPairing {
-  return typeof result === "object"
-}
-
-function isPlayed(result: PlayerResult): result is PlayerPairing {
-  return isPaired(result) && !result.forfeited
-}
-
-function isForfeitLoss(result: PlayerResult): boolean {
-  return isPaired(result) && result.forfeited && result.score === 0
-}
-
-/**
- * Voluntarily Unplayed Rounds (VUR) are defined in the FIDE regulations and in some cases
- * handled differently from rounds in which the player was "available to play".
- */
-function isVoluntarilyUnplayedRound(result: PlayerResult): boolean {
-  return result === 'unpaired' || result === 'half-point-bye' || isForfeitLoss(result)
-}
-
-/**
- * Lookup map for results for a specific player.
- */
-class ResultMap {
-  private pairings: Map<PlayerId, Map<number, PlayerResult>> = new Map()
-
-  constructor(results: RoundResults[]) {
-    for (const round of results) {
-      for (const pairing of round.pairings) {
-        this.addToMap(pairing.white, round.round, {
-          score: pairing.scoreWhite,
-          opponentScore: pairing.scoreBlack,
-          opponent: pairing.black,
-          forfeited: pairing.forfeited,
-        })
-        this.addToMap(pairing.black, round.round, {
-          score: pairing.scoreBlack,
-          opponentScore: pairing.scoreWhite,
-          opponent: pairing.white,
-          forfeited: pairing.forfeited,
-        })
-      }
-      for (const player of round.pairingAllocatedByes ?? []) {
-        this.addToMap(player, round.round, "allocated-bye")
-      }
-      for (const player of round.halfPointByes ?? []) {
-        this.addToMap(player, round.round, "half-point-bye")
-      }
-    }
-  }
-
-  private addToMap(playerId: PlayerId, round: number, result: PlayerResult) {
-    if (!this.pairings.has(playerId)) {
-      this.pairings.set(playerId, new Map())
-    }
-    if (this.pairings.get(playerId)?.has(round)) {
-      throw new Error(`Multiple results in round ${round} for player ${playerId}`)
-    }
-    this.pairings.get(playerId)?.set(round, result)
-  }
-
-  /**
-   * Returns the result for the given player and round.
-   */
-  public get(playerId: PlayerId, round: number): PlayerResult {
-    return this.pairings.get(playerId)?.get(round) ?? "unpaired"
-  }
-
-  /**
-   * Returns all results for a player up to the given round. The length of the returned
-   * array will be the same as the round number, with null values for rounds where the
-   * player was not paired and did not receive a bye.
-   */
-  public getAll(playerId: PlayerId, maxRound: number): PlayerResult[] {
-    return Array.from(Array(maxRound).keys()).map((i) => this.get(playerId, i + 1))
   }
 }

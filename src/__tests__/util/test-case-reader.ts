@@ -1,13 +1,13 @@
 import {promises as fs} from "fs"
 import { parse } from "csv-parse/sync"
 
-import { RoundResults } from "../../results.js";
+import { Results, RoundResults } from "../../results.js";
 
-export async function readTestCases(filename: string): Promise<RoundResults[]> {
+export async function readTestCases(filename: string): Promise<Results> {
   const path = `${__dirname}/../testcases/${filename}.csv`
   const csv = await readCsv(path)
   const rounds = parseRounds(csv)
-  return rounds
+  return new Results(rounds)
 }
 
 function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
