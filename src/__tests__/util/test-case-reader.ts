@@ -37,7 +37,6 @@ function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
             black: color !== 'W' ? playerId : opponentId,
             scoreWhite: (color === 'W' ? score : 1 - score) as Score,
             scoreBlack: (color !== 'W' ? score : 1 - score) as Score,
-            // TODO: support forfeits
             forfeited: color === 'F'
           })
         }

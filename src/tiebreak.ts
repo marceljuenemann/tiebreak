@@ -44,7 +44,6 @@ export enum UnplayedRoundsAdjustment {
  * and Sonneborn-Berger. These modifiers are defined in the FIDE Tiebreak Regulations,
  * Article 14.  
  */
-// TODO: Make private
 export enum Modifier {
   // 14.1 Cut-1: Cut the Least Significant Value
   CUT_1 = 'Cut-1',
@@ -70,7 +69,7 @@ export interface PlayerRanking {
  */
 // TODO: Rename to Tiebreaker
 // TODO: Measure performance for large tournaments. Add caching/memoization if needed.
-export class TiebreakCalculation {
+export class Tiebreaker {
   constructor(
     private results: Results,
     private unplayedRoundsAdjustment: UnplayedRoundsAdjustment,
