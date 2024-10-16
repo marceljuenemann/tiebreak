@@ -138,7 +138,10 @@ describe("TiebreakCalculation", () => {
       })
 
       it("should use virtual opponents for unplayed games", () => {
-        const rounds = new Results(TournamentType.SWISS, [round(["A:B 1:0"]), round(["A:B 1:0 forfeit"])])
+        const rounds = new Results(TournamentType.SWISS, [
+          round(["A:B 1:0"]),
+          round(["A:B 1:0 forfeit"]),
+        ])
         const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2009)
 
         // A's first opponent contributes (0 + 0.5) and the second (1 + 0)
