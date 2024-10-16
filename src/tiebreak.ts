@@ -1,5 +1,17 @@
 import { PlayerId, PlayerResult, Results, isPaired, isPlayed, isVoluntarilyUnplayedRound } from "./results.js"
 
+export enum Tiebreak {
+  /**
+   * The overall score of the player, i.e. 1 point for each win and 0.5 points for each draw.
+   */
+  SCORE = "SCORE",
+
+  /**
+   * The sum of the scores of each of the opponents of a participant.  
+   */
+  BUCHHOLZ = "BH"
+}
+
 export enum UnplayedRoundsAdjustment {
   /**
    * Any unplayed games are counted according to the points that were scored.
@@ -32,6 +44,7 @@ export enum UnplayedRoundsAdjustment {
  * and Sonneborn-Berger. These modifiers are defined in the FIDE Tiebreak Regulations,
  * Article 14.  
  */
+// TODO: Make private
 export enum Modifier {
   // 14.1 Cut-1: Cut the Least Significant Value
   CUT_1 = 'Cut-1',
@@ -46,9 +59,16 @@ export enum Modifier {
   MEDIAN_2 = 'Median2'
 }
 
+export interface PlayerRanking {
+  rank: number,
+  playerId: PlayerId,
+  scores: number[]
+}
+
 /**
  * Calculates tiebreaks for a tournament with the given results and configuration.
  */
+// TODO: Rename to Tiebreaker
 // TODO: Measure performance for large tournaments. Add caching/memoization if needed.
 export class TiebreakCalculation {
   constructor(
@@ -57,26 +77,64 @@ export class TiebreakCalculation {
   ) {}
 
   /**
+   * Calculates a full ranking based on the given tiebreaks. The returned array is sorted
+   * by rank.
+   */
+  public ranking(round: number, tiebreaks: Tiebreak[]): PlayerRanking[] {
+    // Calculate all tiebreak scores.
+    const ranking = this.results.allPlayers().map(playerId => {
+      const scores = tiebreaks.map(t => this.tiebreak(t, playerId, round))
+      return { playerId, scores, rank: 1}
+    })
+
+    // Comparison function for scores.
+    const compareScores = (a: PlayerRanking, b: PlayerRanking) => {
+      for (let i = 0; i < a.scores.length && i < b.scores.length; i++) {
+        if (a.scores[i] !== b.scores[i]) {
+          return b.scores[i] - a.scores[i];
+        }
+      }
+      return 0
+    }
+
+    // Sort by scores and playerId.
+    ranking.sort((a, b) => {
+      const cmp = compareScores(a, b)
+      return cmp === 0 ? a.playerId.toString().localeCompare(b.playerId.toString()) : cmp
+    })
+
+    // Set rank correctly, possibly with multiple players on the same rank.
+    for (let i = 1; i < ranking.length; i++) {
+      if (compareScores(ranking[i-1], ranking[i]) === 0) {
+        ranking[i].rank = ranking[i-1].rank
+      } else {
+        ranking[i].rank = i + 1
+      }
+    }
+    return ranking
+  }
+
+  /**
+   * Calculates the specified tiebreak. This is just a more generic short-hand method for calling
+   * tiebreak methods directly.
+   */
+  public tiebreak(tiebreak: Tiebreak, player: PlayerId, round: number): number {
+    switch (tiebreak) {
+      case Tiebreak.SCORE:
+        return this.score(player, round)
+      
+      case Tiebreak.BUCHHOLZ:
+        return this.buchholz(player, round)
+    }
+  }
+
+  /**
    * Returns the total points the given player scored by the given round.
    */
   public score(player: PlayerId, round: number): number {
     return this.sum(this.results.getAll(player, round).map((result) => {
       return this.scoreForResult(result)
     }))
-  }
-
-  // TODO: Maybe turn PlayerResult into a class which returns the score?
-  private scoreForResult(result: PlayerResult): number {
-    switch (result) {
-      case "unpaired":
-        return 0
-      case "allocated-bye":
-        return 1
-      case "half-point-bye":
-        return 0.5
-      default:
-        return result.score
-    }
   }
 
   /**
@@ -147,6 +205,20 @@ export class TiebreakCalculation {
       }
     })
     return this.sumWithModifier(opponentScores, modifier)
+  }
+
+  // TODO: Maybe turn PlayerResult into a class which returns the score?
+  private scoreForResult(result: PlayerResult): number {
+    switch (result) {
+      case "unpaired":
+        return 0
+      case "allocated-bye":
+        return 1
+      case "half-point-bye":
+        return 0.5
+      default:
+        return result.score
+    }
   }
 
   /**

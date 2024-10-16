@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { Results, RoundResults, Score } from "../results.js"
-import { Modifier, TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
+import { Modifier, Tiebreak, TiebreakCalculation, UnplayedRoundsAdjustment } from "../tiebreak.js"
 import { readTestCases } from "./util/test-case-reader.js"
 
 describe("TiebreakCalculation", () => {
@@ -32,8 +32,8 @@ describe("TiebreakCalculation", () => {
     it("should score byes correctly", () => {
       const tiebreak = new TiebreakCalculation(
         new Results([
-          { round: 1, pairings: [], pairingAllocatedByes: ["A"] },
-          { round: 2, pairings: [], halfPointByes: ["A"] },
+          { pairings: [], pairingAllocatedByes: ["A"] },
+          { pairings: [], halfPointByes: ["A"] },
         ]),
         UnplayedRoundsAdjustment.NONE
       )
@@ -168,6 +168,54 @@ describe("TiebreakCalculation", () => {
       })
     })
   })
+
+  describe("ranking", () => {
+    it("should rank simple tournament", () => {
+      const results = new Results([
+        {
+          // Round 1: Player D did not show up
+          pairings: [
+            {white: 'C', black: 'A', scoreWhite: 0.5, scoreBlack: 0.5, forfeited: false},
+            {white: 'B', black: 'D', scoreWhite: 1, scoreBlack: 0, forfeited: true},
+          ]
+        },
+        {
+          // Round 2: Player D was not paired
+          pairings: [
+            {white: 'A', black: 'B', scoreWhite: 0, scoreBlack: 1, forfeited: false},
+          ],
+          pairingAllocatedByes: ['C']
+        },
+      ])
+      const tiebreak = new TiebreakCalculation(results, UnplayedRoundsAdjustment.FIDE_2023)
+      expect(tiebreak.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ])).toEqual([
+        {playerId: "B", rank: 1, scores: [2, 2.5]},    // BH: 2 for unplayed + 0.5 for A
+        {playerId: "C", rank: 2, scores: [1.5, 2]},    // BH: 0.5 for A + 1.5 for bye
+        {playerId: "A", rank: 3, scores: [0.5, 3.5]},  // BH: 1.5 for C + 2 for B
+        {playerId: "D", rank: 4, scores: [0, 0]},      // BH: 2 * 0 for unplayed rounds
+      ])
+    })
+
+    it("should return tied players on the same rank", () => {
+      const results = new Results([
+        {
+          // Round 1: Player D did not show up
+          pairings: [
+            {white: 'C', black: 'A', scoreWhite: 0.5, scoreBlack: 0.5, forfeited: false},
+            {white: 'B', black: 'D', scoreWhite: 1, scoreBlack: 0, forfeited: false},
+          ]
+        },
+      ])
+      const tiebreak = new TiebreakCalculation(results, UnplayedRoundsAdjustment.FIDE_2023)
+      expect(tiebreak.ranking(1, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ])).toEqual([
+        {playerId: "B", rank: 1, scores: [1, 0]},
+        {playerId: "A", rank: 2, scores: [0.5, 0.5]},
+        {playerId: "C", rank: 2, scores: [0.5, 0.5]},
+        {playerId: "D", rank: 4, scores: [0, 1]},
+      ])
+    })
+  })
+
 })
 
 /**

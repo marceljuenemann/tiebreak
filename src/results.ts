@@ -90,6 +90,10 @@ export class Results {
   public getAll(playerId: PlayerId, maxRound: number): PlayerResult[] {
     return Array.from(Array(maxRound).keys()).map((i) => this.get(playerId, i + 1))
   }
+
+  public allPlayers(): PlayerId[] {
+    return Array.from(this.pairings.keys())
+  }
 }
 
 /**
