@@ -14,9 +14,7 @@ describe("TiebreakCalculation", () => {
         round(4, ["B:A 1:0 forfeit"]),
       ])
 
-      const tiebreak = new TiebreakCalculation(results, {
-        unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
-      })
+      const tiebreak = new TiebreakCalculation(results, UnplayedRoundsAdjustment.NONE)
       expect(tiebreak.score("A", 1)).toEqual(1)
       expect(tiebreak.score("A", 2)).toEqual(2)
       expect(tiebreak.score("A", 3)).toEqual(2)
@@ -37,7 +35,7 @@ describe("TiebreakCalculation", () => {
           { round: 1, pairings: [], pairingAllocatedByes: ["A"] },
           { round: 2, pairings: [], halfPointByes: ["A"] },
         ]),
-        { unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE },
+        UnplayedRoundsAdjustment.NONE
       )
 
       expect(tiebreak.score("A", 1)).toEqual(1)
@@ -55,9 +53,7 @@ describe("TiebreakCalculation", () => {
           round(2, ["C:A 0.5:0.5"]),
           round(3, ["B:A 0:1 forfeit"]),
         ])
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.NONE)
 
         expect(tiebreak.buchholz("A", 1)).toEqual(0)
         expect(tiebreak.buchholz("B", 1)).toEqual(1)
@@ -72,26 +68,20 @@ describe("TiebreakCalculation", () => {
 
       it("should pass FIDE exercise 1 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.NONE)
         expect(tiebreak.buchholz('2', 5)).toEqual(13)
       })
 
       it("should pass FIDE exercise 2 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.NONE)
         expect(tiebreak.buchholz('1', 5)).toEqual(12.5)
         expect(tiebreak.buchholz('3', 5)).toEqual(15.5)
       })
 
       it("should NOT pass FIDE exercise 3 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.NONE,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.NONE)
         expect(tiebreak.buchholz('5', 5)).toEqual(8.5)
         expect(tiebreak.buchholz('8', 5)).toEqual(13.5)
         expect(tiebreak.buchholz('11', 5)).toEqual(12.5) // 13.5 with FIDE_2023
@@ -102,26 +92,20 @@ describe("TiebreakCalculation", () => {
 
       it("should pass FIDE exercise 1 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2023)
         expect(tiebreak.buchholz('2', 5)).toEqual(13)
       })
 
       it("should pass FIDE exercise 2 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2023)
         expect(tiebreak.buchholz('1', 5)).toEqual(12.5)
         expect(tiebreak.buchholz('3', 5)).toEqual(15.5)
       })
 
       it("should pass FIDE exercise 3 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2023)
         expect(tiebreak.buchholz('5', 5)).toEqual(8.5)
         expect(tiebreak.buchholz('8', 5)).toEqual(13.5)
         expect(tiebreak.buchholz('11', 5)).toEqual(13.5)
@@ -129,9 +113,7 @@ describe("TiebreakCalculation", () => {
 
       it("should pass FIDE exercise 4 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2023)
         expect(tiebreak.buchholz('1', 5)).toEqual(12.5)
         expect(tiebreak.buchholz('3', 5)).toEqual(15.5)
         expect(tiebreak.buchholz('16', 5)).toEqual(12.5)
@@ -148,9 +130,7 @@ describe("TiebreakCalculation", () => {
           round(3, ['A:D 1:0', 'C:Cy 1:0', 'E:Ez 1:0']),
           round(4, ['B:Y 0:1 forfeit', 'A:E 1:0', 'C:Cz 1:0', 'D:Dz 1:0']),
         ])
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2009,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2009)
 
         expect(tiebreak.buchholz('A', 1)).toEqual(0)
         expect(tiebreak.buchholz('A', 2)).toEqual(1 * 0.5 + 1 * 1)
@@ -163,9 +143,7 @@ describe("TiebreakCalculation", () => {
           round(1, ['A:B 1:0']),
           round(2, ['A:B 1:0 forfeit']),
         ])
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2009,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2009)
 
         // A's first opponent contributes (0 + 0.5) and the second (1 + 0)
         expect(tiebreak.buchholz('A', 2)).toEqual(0.5 + 1)
@@ -183,9 +161,7 @@ describe("TiebreakCalculation", () => {
     describe('with FIDE_2023 unplayed rounds adjustment', () => {
       it("should pass FIDE exercise 5 (2023)", async () => {
         const rounds = await readTestCases("fide-exercise-2023")
-        const tiebreak = new TiebreakCalculation(rounds, {
-          unplayedRoundsAdjustment: UnplayedRoundsAdjustment.FIDE_2023,
-        })
+        const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2023)
         expect(tiebreak.buchholz('5', 5, Modifier.CUT_1)).toEqual(7.5)
         expect(tiebreak.buchholz('8', 5, Modifier.CUT_1)).toEqual(12)
         expect(tiebreak.buchholz('11', 5, Modifier.CUT_1)).toEqual(12)

@@ -27,14 +27,6 @@ export enum UnplayedRoundsAdjustment {
   FIDE_2009 = "FIDE_2009",
 }
 
-export type TiebreakConfig = {
-  /**
-   * How to adjust unplayed games for the calculation of Buchholz, Sonneborn-Berger, and
-   * other tiebreaks that are based on opponents' results.
-   */
-  unplayedRoundsAdjustment: UnplayedRoundsAdjustment
-}
-
 /**
  * Modifiers for tiebreaks that are based on a sum of values, such as Buchholz
  * and Sonneborn-Berger. These modifiers are defined in the FIDE Tiebreak Regulations,
@@ -61,7 +53,7 @@ export enum Modifier {
 export class TiebreakCalculation {
   constructor(
     private results: Results,
-    private config: TiebreakConfig,
+    private unplayedRoundsAdjustment: UnplayedRoundsAdjustment,
   ) {}
 
   /**
@@ -91,7 +83,7 @@ export class TiebreakCalculation {
    * Returns the players score with unplayed rounds adjusted according to the configured UnplayedRoundsAdjustment.
    */
   public adjustedScore(player: PlayerId, round: number): number {
-    switch (this.config.unplayedRoundsAdjustment) {
+    switch (this.unplayedRoundsAdjustment) {
       case UnplayedRoundsAdjustment.NONE:
         return this.score(player, round)
 
@@ -130,7 +122,7 @@ export class TiebreakCalculation {
   public buchholz(player: PlayerId, round: number, modifier?: Modifier): number {
     const opponentScores = this.results.getAll(player, round).map((result, index) => {
       const currentRound = index + 1
-      switch (this.config.unplayedRoundsAdjustment) {
+      switch (this.unplayedRoundsAdjustment) {
         case UnplayedRoundsAdjustment.NONE:
           return isPaired(result) ? this.adjustedScore(result.opponent, round) : 0
 
