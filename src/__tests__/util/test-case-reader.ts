@@ -1,7 +1,7 @@
-import {promises as fs} from "fs"
+import { promises as fs } from "fs"
 import { parse } from "csv-parse/sync"
 
-import { Results, RoundResults } from "../../results.js";
+import { Results, RoundResults, Score } from "../../results.js"
 
 export async function readTestCases(filename: string): Promise<Results> {
   const path = `${__dirname}/../testcases/${filename}.csv`
@@ -17,27 +17,27 @@ function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
     const players = new Set<string>()
 
     for (const row of data) {
-      const playerId = row['#']
+      const playerId = row["#"]
 
       // Parse result, e.g. +B10, =BYE, -F11
       const info = row[round]
-      const score = {'+': 1, '=': 0.5, '-': 0}[info[0]]
-      if (info.substring(1) === 'BYE') {
+      const score = { "+": 1, "=": 0.5, "-": 0 }[info[0]] as Score
+      if (info.substring(1) === "BYE") {
         if (score == 1) {
           roundResult.pairingAllocatedByes?.push(playerId)
         } else if (score == 0.5) {
           roundResult.halfPointByes?.push(playerId)
         }
-      } else if (info !== '--') {
-        const color = info[1] as 'W' | 'B' | 'F'
+      } else if (info !== "--") {
+        const color = info[1] as "W" | "B" | "F"
         const opponentId = info.substring(2)
         if (!players.has(opponentId)) {
-          roundResult.pairings.push({ 
-            white: color === 'W' ? playerId : opponentId,
-            black: color !== 'W' ? playerId : opponentId,
-            scoreWhite: (color === 'W' ? score : 1 - score) as Score,
-            scoreBlack: (color !== 'W' ? score : 1 - score) as Score,
-            forfeited: color === 'F'
+          roundResult.pairings.push({
+            white: color === "W" ? playerId : opponentId,
+            black: color !== "W" ? playerId : opponentId,
+            scoreWhite: (color === "W" ? score : 1 - score) as Score,
+            scoreBlack: (color !== "W" ? score : 1 - score) as Score,
+            forfeited: color === "F",
           })
         }
       }
@@ -50,5 +50,5 @@ function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
 
 async function readCsv(filename: string): Promise<Array<Record<string, string>>> {
   const content = await fs.readFile(filename)
-  return parse(content, {columns: true}) as Array<Record<string, string>>
+  return parse(content, { columns: true }) as Array<Record<string, string>>
 }

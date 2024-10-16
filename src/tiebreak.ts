@@ -1,4 +1,11 @@
-import { PlayerId, PlayerResult, Results, isPaired, isPlayed, isVoluntarilyUnplayedRound } from "./results.js"
+import {
+  PlayerId,
+  PlayerResult,
+  Results,
+  isPaired,
+  isPlayed,
+  isVoluntarilyUnplayedRound,
+} from "./results.js"
 
 export enum Tiebreak {
   /**
@@ -7,9 +14,9 @@ export enum Tiebreak {
   SCORE = "SCORE",
 
   /**
-   * The sum of the scores of each of the opponents of a participant.  
+   * The sum of the scores of each of the opponents of a participant.
    */
-  BUCHHOLZ = "BH"
+  BUCHHOLZ = "BH",
 }
 
 export enum UnplayedRoundsAdjustment {
@@ -42,25 +49,25 @@ export enum UnplayedRoundsAdjustment {
 /**
  * Modifiers for tiebreaks that are based on a sum of values, such as Buchholz
  * and Sonneborn-Berger. These modifiers are defined in the FIDE Tiebreak Regulations,
- * Article 14.  
+ * Article 14.
  */
 export enum Modifier {
   // 14.1 Cut-1: Cut the Least Significant Value
-  CUT_1 = 'Cut-1',
+  CUT_1 = "Cut-1",
 
   // 14.2 Cut-2: Cut the two Least Significant Values
-  CUT_2 = 'Cut-2',
-  
+  CUT_2 = "Cut-2",
+
   // 14.3 Median­1: Cut the Least and the Most Significant Values (in that order)
-  MEDIAN_1 = 'Median1',
+  MEDIAN_1 = "Median1",
 
   // 14.4 Median­2: Cut the two Least and the two Most Significant Values (in that order)
-  MEDIAN_2 = 'Median2'
+  MEDIAN_2 = "Median2",
 }
 
 export interface PlayerRanking {
-  rank: number,
-  playerId: PlayerId,
+  rank: number
+  playerId: PlayerId
   scores: number[]
 }
 
@@ -81,16 +88,16 @@ export class Tiebreaker {
    */
   public ranking(round: number, tiebreaks: Tiebreak[]): PlayerRanking[] {
     // Calculate all tiebreak scores.
-    const ranking = this.results.allPlayers().map(playerId => {
-      const scores = tiebreaks.map(t => this.tiebreak(t, playerId, round))
-      return { playerId, scores, rank: 1}
+    const ranking = this.results.allPlayers().map((playerId) => {
+      const scores = tiebreaks.map((t) => this.tiebreak(t, playerId, round))
+      return { playerId, scores, rank: 1 }
     })
 
     // Comparison function for scores.
     const compareScores = (a: PlayerRanking, b: PlayerRanking) => {
       for (let i = 0; i < a.scores.length && i < b.scores.length; i++) {
         if (a.scores[i] !== b.scores[i]) {
-          return b.scores[i] - a.scores[i];
+          return b.scores[i] - a.scores[i]
         }
       }
       return 0
@@ -104,8 +111,8 @@ export class Tiebreaker {
 
     // Set rank correctly, possibly with multiple players on the same rank.
     for (let i = 1; i < ranking.length; i++) {
-      if (compareScores(ranking[i-1], ranking[i]) === 0) {
-        ranking[i].rank = ranking[i-1].rank
+      if (compareScores(ranking[i - 1], ranking[i]) === 0) {
+        ranking[i].rank = ranking[i - 1].rank
       } else {
         ranking[i].rank = i + 1
       }
@@ -121,7 +128,7 @@ export class Tiebreaker {
     switch (tiebreak) {
       case Tiebreak.SCORE:
         return this.score(player, round)
-      
+
       case Tiebreak.BUCHHOLZ:
         return this.buchholz(player, round)
     }
@@ -131,9 +138,11 @@ export class Tiebreaker {
    * Returns the total points the given player scored by the given round.
    */
   public score(player: PlayerId, round: number): number {
-    return this.sum(this.results.getAll(player, round).map((result) => {
-      return this.scoreForResult(result)
-    }))
+    return this.sum(
+      this.results.getAll(player, round).map((result) => {
+        return this.scoreForResult(result)
+      }),
+    )
   }
 
   /**
@@ -149,20 +158,24 @@ export class Tiebreaker {
         // counted according to the points they scored. However, after a player withdrew (i.e. no later rounds
         // where they were available to play), all rounds are counted as 0.5.
         const lastAvailableToPlayRound = this.lastAvailableToPlayRound(player, round)
-        return this.score(player, lastAvailableToPlayRound) + (round - lastAvailableToPlayRound) * 0.5
+        return (
+          this.score(player, lastAvailableToPlayRound) + (round - lastAvailableToPlayRound) * 0.5
+        )
       }
 
       case UnplayedRoundsAdjustment.FIDE_2009:
         // All unplayed rounds are counted as 0.5 points.
-        return this.sum(this.results.getAll(player, round).map((result) => {
-          return isPlayed(result) ? result.score : 0.5
-        }))
+        return this.sum(
+          this.results.getAll(player, round).map((result) => {
+            return isPlayed(result) ? result.score : 0.5
+          }),
+        )
     }
   }
 
   /**
    * Returns the highest round number in which the player was "available to play", i.e. they didn't
-   * voluntarily not play the round. Returns 0 if the player was never available to play. 
+   * voluntarily not play the round. Returns 0 if the player was never available to play.
    */
   private lastAvailableToPlayRound(player: PlayerId, maxRound: number) {
     for (let round = maxRound; round >= 1; round--) {
@@ -221,8 +234,8 @@ export class Tiebreaker {
   }
 
   /**
-   * Applies the given modifier to the values (e.g. cutting least signifiant values)
-   * and returns the sum of the remaining values. 
+   * Applies the given modifier to the values (e.g. cutting least significant values)
+   * and returns the sum of the remaining values.
    */
   private sumWithModifier(values: number[], modifier?: Modifier): number {
     values.sort()

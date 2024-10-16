@@ -128,5 +128,5 @@ export function isForfeitLoss(result: PlayerResult): boolean {
  * handled differently from rounds in which the player was "available to play".
  */
 export function isVoluntarilyUnplayedRound(result: PlayerResult): boolean {
-  return result === 'unpaired' || result === 'half-point-bye' || isForfeitLoss(result)
+  return result === "unpaired" || result === "half-point-bye" || isForfeitLoss(result)
 }
