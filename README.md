@@ -8,24 +8,70 @@ Tiebreak is a TypeScript library for calculating various tournament tiebreak sco
 
 ## Features
 
-- Calculation of the following tiebreakers:
-  - Buchholz
-  - (more to come!)
-- Configurable adjustments for unplayed games:
-  - FIDE regulations from 2023 ("dummy opponent")
-  - FIDE regulations from 2009 ("virtual opponent")
-  - No adjustment for unplayed games
-- Built in calculation of entire tournament rankings
+**Calculation of the following tiebreakers:**
+
+- Buchholz
+- (more to come!)
+
+**Configurable adjustments for unplayed games:**
+
+- FIDE regulations from 2023 ("dummy opponent")
+- FIDE regulations from 2009 ("virtual opponent")
+- No adjustment for unplayed games
+
+**Built in calculation of entire tournament rankings**
 
 Note: Only individual Swiss tournaments are currently supported. Team tournaments and round robin tournaments are not implemented correctly yet.
 
 ## Installation
 
-TODO
+`npm install --save tiebreak`
 
 ## Usage
 
-TODO
+First, you need to create a `Results` object with all relevant pairing information. You can use an arbitrary string or number to identify players.
+
+```typescript
+import { Results } from "tiebreak"
+
+const results = new Results([
+  {
+    // Example round 1: Player D did not show up
+    pairings: [
+      { white: "C", black: "A", scoreWhite: 0.5, scoreBlack: 0.5, forfeited: false },
+      { white: "B", black: "D", scoreWhite: 1, scoreBlack: 0, forfeited: true },
+    ],
+  },
+  {
+    // Example round 2: Player D was not paired, player C received a bye
+    pairings: [{ white: "A", black: "B", scoreWhite: 0, scoreBlack: 1, forfeited: false }],
+    pairingAllocatedByes: ["C"],
+  },
+])
+```
+
+You can now calculate a specific tiebreak score for a given player and round like this:
+
+```typescript
+const tiebreaker = new Tiebreaker(results, UnplayedRoundsAdjustment.FIDE_2023)
+console.log(tiebreaker.buchholz("A", 2))
+// Output: 3.5
+```
+
+Or you can just calculate an entire ranking with multiple tiebreakers:
+
+```typescript
+console.log(tiebreaker.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ]))
+/*
+  Output:
+  [
+    { rank: 1, playerId: "B", scores: [2, 2.5] },
+    { rank: 2, playerId: "C", scores: [1.5, 2] },
+    { rank: 3, playerId: "A", scores: [0.5, 3.5] },
+    { rank: 4, playerId: "D", scores: [0, 0] },
+  ]
+*/
+```
 
 ## Project Goals
 
@@ -47,6 +93,7 @@ TODO
 **Deployment procedure:**
 
 - Increase version
-- Update CHANGELOG
-- Push to master and ensure all workflows are passing
+- Update CHANGELOG (or create it)
+- Push to main and ensure all workflows are passing
+- `npm run build`
 - `npm publish`
