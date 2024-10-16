@@ -13,7 +13,7 @@ export async function readTestCases(filename: string): Promise<Results> {
 function parseRounds(data: Array<Record<string, string>>): RoundResults[] {
   const roundResults: RoundResults[] = []
   for (let round = 1; round in data[0]; round++) {
-    const roundResult: RoundResults = { round, pairings: [], pairingAllocatedByes: [], halfPointByes: [] }
+    const roundResult: RoundResults = { pairings: [], pairingAllocatedByes: [], halfPointByes: [] }
     const players = new Set<string>()
 
     for (const row of data) {

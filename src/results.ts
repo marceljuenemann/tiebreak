@@ -10,12 +10,6 @@ export type PlayerId = string | number
  */
 export type RoundResults = {
   /**
-   * Round number.
-   */
-  // TODO: delete
-  round: number
-
-  /**
    * Pairings for this round.
    */
   pairings: Pairing[]
@@ -49,26 +43,26 @@ export class Results {
   private pairings: Map<PlayerId, Map<number, PlayerResult>> = new Map()
 
   constructor(results: RoundResults[]) {
-    for (const round of results) {
-      for (const pairing of round.pairings) {
-        this.addToMap(pairing.white, round.round, {
+    for (const [roundIndex, roundResults] of results.entries()) {
+      for (const pairing of roundResults.pairings) {
+        this.addToMap(pairing.white, roundIndex + 1, {
           score: pairing.scoreWhite,
           opponentScore: pairing.scoreBlack,
           opponent: pairing.black,
           forfeited: pairing.forfeited,
         })
-        this.addToMap(pairing.black, round.round, {
+        this.addToMap(pairing.black, roundIndex + 1, {
           score: pairing.scoreBlack,
           opponentScore: pairing.scoreWhite,
           opponent: pairing.white,
           forfeited: pairing.forfeited,
         })
       }
-      for (const player of round.pairingAllocatedByes ?? []) {
-        this.addToMap(player, round.round, "allocated-bye")
+      for (const player of roundResults.pairingAllocatedByes ?? []) {
+        this.addToMap(player, roundIndex + 1, "allocated-bye")
       }
-      for (const player of round.halfPointByes ?? []) {
-        this.addToMap(player, round.round, "half-point-bye")
+      for (const player of roundResults.halfPointByes ?? []) {
+        this.addToMap(player, roundIndex + 1, "half-point-bye")
       }
     }
   }

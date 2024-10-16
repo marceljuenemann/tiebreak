@@ -8,10 +8,10 @@ describe("TiebreakCalculation", () => {
   describe("score", () => {
     it("should sum score of all pairings", () => {
       const results = new Results([
-        round(1, ["A:B 1:0"]),
-        round(2, ["C:A 0:1 forfeit"]),
-        round(3, ["C:B 0.5:0.5"]),
-        round(4, ["B:A 1:0 forfeit"]),
+        round(["A:B 1:0"]),
+        round(["C:A 0:1 forfeit"]),
+        round(["C:B 0.5:0.5"]),
+        round(["B:A 1:0 forfeit"]),
       ])
 
       const tiebreak = new TiebreakCalculation(results, UnplayedRoundsAdjustment.NONE)
@@ -49,9 +49,9 @@ describe("TiebreakCalculation", () => {
       // TODO: test byes
       it("should sum points of opponents", () => {
         const rounds = new Results([
-          round(1, ["A:B 1:0"]),
-          round(2, ["C:A 0.5:0.5"]),
-          round(3, ["B:A 0:1 forfeit"]),
+          round(["A:B 1:0"]),
+          round(["C:A 0.5:0.5"]),
+          round(["B:A 0:1 forfeit"]),
         ])
         const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.NONE)
 
@@ -125,10 +125,10 @@ describe("TiebreakCalculation", () => {
       // TODO: byes
       it('should count any unplayed games of opponents as draw', () => {
         const rounds = new Results([
-          round(1, ['A:B 1:0', 'C:Cx 1:0', 'D:Dx 1:0', 'E:Ex 1:0']),
-          round(2, ['B:X 1:0 forfeit', 'A:C 1:0', 'D:Dy 1:0', 'E:Ey 1:0']),
-          round(3, ['A:D 1:0', 'C:Cy 1:0', 'E:Ez 1:0']),
-          round(4, ['B:Y 0:1 forfeit', 'A:E 1:0', 'C:Cz 1:0', 'D:Dz 1:0']),
+          round(['A:B 1:0', 'C:Cx 1:0', 'D:Dx 1:0', 'E:Ex 1:0']),
+          round(['B:X 1:0 forfeit', 'A:C 1:0', 'D:Dy 1:0', 'E:Ey 1:0']),
+          round(['A:D 1:0', 'C:Cy 1:0', 'E:Ez 1:0']),
+          round(['B:Y 0:1 forfeit', 'A:E 1:0', 'C:Cz 1:0', 'D:Dz 1:0']),
         ])
         const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2009)
 
@@ -140,8 +140,8 @@ describe("TiebreakCalculation", () => {
 
       it('should use virtual opponents for unplayed games', () => {
         const rounds = new Results([
-          round(1, ['A:B 1:0']),
-          round(2, ['A:B 1:0 forfeit']),
+          round(['A:B 1:0']),
+          round(['A:B 1:0 forfeit']),
         ])
         const tiebreak = new TiebreakCalculation(rounds, UnplayedRoundsAdjustment.FIDE_2009)
 
@@ -174,9 +174,8 @@ describe("TiebreakCalculation", () => {
  * Helper for specifying a round results in a more readable format, e.g. "A B 1 0".
  */
 // TODO: Use something like Results.fromStrings()
-function round(round: number, pairings: string[]): RoundResults {
+function round(pairings: string[]): RoundResults {
   return {
-    round,
     pairings: pairings.map((pairing) => {
       const [white, black, scoreWhite, scoreBlack, forfeited] = pairing
         .replaceAll(":", " ")
