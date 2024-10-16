@@ -74,7 +74,6 @@ export interface PlayerRanking {
 /**
  * Calculates tiebreaks for a tournament with the given results and configuration.
  */
-// TODO: Rename to Tiebreaker
 // TODO: Measure performance for large tournaments. Add caching/memoization if needed.
 export class Tiebreaker {
   constructor(
