@@ -172,7 +172,24 @@ describe("TiebreakCalculation", () => {
         expect(tiebreak.buchholz("7", 5, Modifier.CUT_1)).toEqual(12.5)
         expect(tiebreak.buchholz("9", 5, Modifier.CUT_1)).toEqual(7.5)
         expect(tiebreak.buchholz("13", 5, Modifier.CUT_1)).toEqual(12)
-      })      
+      })
+
+      it("should pass FIDE exercise 7 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2023)
+        expect(tiebreak.buchholz("1", 5, Modifier.CUT_1)).toEqual(11.0)
+        expect(tiebreak.buchholz("3", 5, Modifier.CUT_1)).toEqual(13)
+        expect(tiebreak.buchholz("4", 5, Modifier.CUT_1)).toEqual(11.5)
+        expect(tiebreak.buchholz("16", 5, Modifier.CUT_1)).toEqual(11)
+      })
+
+      it("should pass FIDE exercise 8 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2023)
+        expect(tiebreak.buchholz("12", 5, Modifier.CUT_1)).toEqual(9.5)
+        expect(tiebreak.buchholz("14", 5, Modifier.CUT_1)).toEqual(9)
+        expect(tiebreak.buchholz("15", 5, Modifier.CUT_1)).toEqual(11)
+      })
     })
 
     /*
