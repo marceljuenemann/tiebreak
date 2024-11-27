@@ -165,7 +165,25 @@ describe("TiebreakCalculation", () => {
         expect(tiebreak.buchholz("8", 5, Modifier.CUT_1)).toEqual(12)
         expect(tiebreak.buchholz("11", 5, Modifier.CUT_1)).toEqual(12)
       })
+
+      it("should pass FIDE exercise 6 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2023)
+        expect(tiebreak.buchholz("7", 5, Modifier.CUT_1)).toEqual(12.5)
+        expect(tiebreak.buchholz("9", 5, Modifier.CUT_1)).toEqual(7.5)
+        expect(tiebreak.buchholz("13", 5, Modifier.CUT_1)).toEqual(12)
+      })      
     })
+
+    /*
+    describe("with FIDE_2009 unplayed rounds adjustment", () => {
+      // TODO
+    })
+
+    describe("without unplayed rounds adjustment", () => {
+      // TODO
+    })
+    */
   })
 
   describe("ranking", () => {
