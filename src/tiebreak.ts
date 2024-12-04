@@ -225,9 +225,11 @@ export class Tiebreaker {
   }
 
   /**
-   * Applies the given modifier to the games, e.g. cutting least significant values.
+   * Buchholz score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
    */
-  private applyModifier(games: AdjustedGame[], modifier?: Modifier): AdjustedGame[] {
+  public buchholz(player: PlayerId, round: number, modifier?: Modifier): number {
+    let games = this.adjustedGames(player, round)
+
     games.sort((a, b) => {
       // Since 2023, voluntarily unplayed rounds should get cut first.
       if (this.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.FIDE_2023 && a.isVur !== b.isVur) {
@@ -238,16 +240,10 @@ export class Tiebreaker {
 
     switch (modifier) {
       case Modifier.CUT_1:
-        return games.slice(0, games.length - 1)
+        games = games.slice(0, games.length - 1)
+        break;
     }
-    return games
-  }
 
-  /**
-   * Buchholz score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
-   */
-  public buchholz(player: PlayerId, round: number, modifier?: Modifier): number {
-    const games = this.applyModifier(this.adjustedGames(player, round), modifier)
     return this.sum(games.map(g => g.opponentScore))
   }
 
