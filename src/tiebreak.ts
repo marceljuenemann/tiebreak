@@ -17,6 +17,16 @@ export enum Tiebreak {
    * The sum of the scores of each of the opponents of a participant.
    */
   BUCHHOLZ = "BH",
+
+  /**
+   * Buchholz with the least significant opponent cut. Note that voluntarily
+   * unplayed rounds will be cut first if FIDE_2023 regulations are applied.
+   */
+  BUCHHOLZ_CUT1 = "BH-C1",
+
+  BUCHHOLZ_CUT2 = "BH-C2",
+  BUCHHOLZ_MEDIAN1 = "BH-M1",
+  BUCHHOLZ_MEDIAN2 = "BH-M2",
 }
 
 export enum UnplayedRoundsAdjustment {
@@ -44,25 +54,6 @@ export enum UnplayedRoundsAdjustment {
    * score a draw in all following rounds.
    */
   FIDE_2009 = "FIDE_2009",
-}
-
-/**
- * Modifiers for tiebreaks that are based on a sum of values, such as Buchholz
- * and Sonneborn-Berger. These modifiers are defined in the FIDE Tiebreak Regulations,
- * Article 14.
- */
-export enum Modifier {
-  // 14.1 Cut-1: Cut the Least Significant Value
-  CUT_1 = "Cut-1",
-
-  // 14.2 Cut-2: Cut the two Least Significant Values
-  CUT_2 = "Cut-2",
-
-  // 14.3 Median­1: Cut the Least and the Most Significant Values (in that order)
-  MEDIAN_1 = "Median1",
-
-  // 14.4 Median­2: Cut the two Least and the two Most Significant Values (in that order)
-  MEDIAN_2 = "Median2",
 }
 
 export interface PlayerRanking {
@@ -137,6 +128,14 @@ export class Tiebreaker {
 
       case Tiebreak.BUCHHOLZ:
         return this.buchholz(player, round)
+      case Tiebreak.BUCHHOLZ_CUT1:
+        return this.buchholz(player, round, 1, 0)
+      case Tiebreak.BUCHHOLZ_CUT2:
+        return this.buchholz(player, round, 2, 0)
+      case Tiebreak.BUCHHOLZ_MEDIAN1:
+        return this.buchholz(player, round, 1, 1)
+      case Tiebreak.BUCHHOLZ_MEDIAN2:
+        return this.buchholz(player, round, 2, 2)
     }
   }
 
@@ -191,7 +190,7 @@ export class Tiebreaker {
     }
     return 0
   }
-   
+
   /**
    * Returns all opponents of the given player with their adjusted scores for the purpose of
    * calculating tiebreaks like Buchholz and SoBerg.
@@ -202,7 +201,7 @@ export class Tiebreaker {
         round: index + 1,
         gameScore: this.scoreForResult(result),
         opponentScore: isPaired(result) ? this.adjustedScore(result.opponent, round) : 0,
-        isVur: isVoluntarilyUnplayedRound(result)
+        isVur: isVoluntarilyUnplayedRound(result),
       }
 
       // Apply unplayed round adjustments.
@@ -227,24 +226,30 @@ export class Tiebreaker {
   /**
    * Buchholz score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
    */
-  public buchholz(player: PlayerId, round: number, modifier?: Modifier): number {
+  public buchholz(
+    player: PlayerId,
+    round: number,
+    cutLowest: number = 0,
+    cutHighest: number = 0,
+  ): number {
     let games = this.adjustedGames(player, round)
 
-    games.sort((a, b) => {
-      // Since 2023, voluntarily unplayed rounds should get cut first.
-      if (this.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.FIDE_2023 && a.isVur !== b.isVur) {
-        return Number(a.isVur) - Number(b.isVur)
-      }
-      return b.opponentScore - a.opponentScore
-    })
+    if (cutLowest || cutHighest) {
+      games.sort((a, b) => {
+        // Since 2023, voluntarily unplayed rounds should get cut first.
+        if (
+          this.unplayedRoundsAdjustment === UnplayedRoundsAdjustment.FIDE_2023 &&
+          a.isVur !== b.isVur
+        ) {
+          return Number(a.isVur) - Number(b.isVur)
+        }
+        return b.opponentScore - a.opponentScore
+      })
 
-    switch (modifier) {
-      case Modifier.CUT_1:
-        games = games.slice(0, games.length - 1)
-        break;
+      games = games.slice(cutHighest, -cutLowest)
     }
 
-    return this.sum(games.map(g => g.opponentScore))
+    return this.sum(games.map((g) => g.opponentScore))
   }
 
   // TODO: Maybe turn PlayerResult into a class which returns the score?
