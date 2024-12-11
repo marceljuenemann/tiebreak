@@ -2,6 +2,7 @@ import {
   PlayerId,
   PlayerResult,
   Results,
+  Score,
   isPaired,
   isPlayed,
   isVoluntarilyUnplayedRound,
@@ -64,8 +65,8 @@ export interface PlayerRanking {
 
 interface AdjustedGame {
   round: number
-  gameScore: number
-  opponentScore: number
+  gameScore: Score
+  opponentScore: Score
   isVur: boolean
 }
 
@@ -250,6 +251,18 @@ export class Tiebreaker {
     }
 
     return this.sum(games.map((g) => g.opponentScore))
+  }
+
+
+  /**
+   * Sonneborn-Berger score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
+   */
+  public sonnebornBerger(
+    player: PlayerId,
+    round: number
+  ): number {
+    let games = this.adjustedGames(player, round)
+    return this.sum(games.map((g) => g.opponentScore * g.gameScore))
   }
 
   // TODO: Maybe turn PlayerResult into a class which returns the score?
