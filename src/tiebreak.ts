@@ -72,7 +72,7 @@ export interface PlayerRanking {
 interface AdjustedGame {
   round: number
   gameScore: Score
-  opponentScore: Score
+  opponentScore: number
   isVur: boolean
 }
 
@@ -271,7 +271,7 @@ export class Tiebreaker {
   }
 
   // TODO: Maybe turn PlayerResult into a class which returns the score?
-  private scoreForResult(result: PlayerResult): number {
+  private scoreForResult(result: PlayerResult): Score {
     switch (result) {
       case "unpaired":
         return 0
