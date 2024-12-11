@@ -1,6 +1,6 @@
 {
   "name": "tiebreak",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Calculation of chess tournament tiebreaks compliant with FIDE regulations",
   "keywords": [
     "chess",
