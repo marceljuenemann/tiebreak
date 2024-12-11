@@ -33,7 +33,7 @@ export enum Tiebreak {
    * Calculated by adding, for each round, a value given by multiplying the final
    * score of the opponents by the points scored against them.
    */
-  SONNEBORG_BERGER = "SB",
+  SONNEBORN_BERGER = "SB",
 }
 
 export enum UnplayedRoundsAdjustment {
@@ -144,7 +144,7 @@ export class Tiebreaker {
       case Tiebreak.BUCHHOLZ_MEDIAN2:
         return this.buchholz(player, round, 2, 2)
 
-      case Tiebreak.SONNEBORG_BERGER:
+      case Tiebreak.SONNEBORN_BERGER:
         return this.sonnebornBerger(player, round)
     }
   }
@@ -262,15 +262,11 @@ export class Tiebreaker {
     return this.sum(games.map((g) => g.opponentScore))
   }
 
-
   /**
    * Sonneborn-Berger score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
    */
-  public sonnebornBerger(
-    player: PlayerId,
-    round: number
-  ): number {
-    let games = this.adjustedGames(player, round)
+  public sonnebornBerger(player: PlayerId, round: number): number {
+    const games = this.adjustedGames(player, round)
     return this.sum(games.map((g) => g.opponentScore * g.gameScore))
   }
 

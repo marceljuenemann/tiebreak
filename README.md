@@ -12,6 +12,7 @@ Tiebreak is a TypeScript library for calculating various tournament tiebreak sco
 
 - Buchholz
 - Buchholz with modifiers (Cut-1, Cut-2, Median-1 etc.)
+- Sonneborn-Berger
 - (more to come)
 
 **Configurable adjustments for unplayed games:**
