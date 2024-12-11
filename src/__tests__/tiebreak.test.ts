@@ -269,12 +269,12 @@ describe("TiebreakCalculation", () => {
       ])
       const tiebreak = new Tiebreaker(results, UnplayedRoundsAdjustment.FIDE_2023)
       expect(
-        tiebreak.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ, Tiebreak.BUCHHOLZ_CUT1]),
+        tiebreak.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ, Tiebreak.BUCHHOLZ_CUT1, Tiebreak.SONNEBORG_BERGER]),
       ).toEqual([
-        { playerId: "B", rank: 1, scores: [2, 2.5, 2] }, // BH: 2 for unplayed + 0.5 for A
-        { playerId: "C", rank: 2, scores: [1.5, 2, 1.5] }, // BH: 0.5 for A + 1.5 for bye
-        { playerId: "A", rank: 3, scores: [0.5, 3.5, 2] }, // BH: 1.5 for C + 2 for B
-        { playerId: "D", rank: 4, scores: [0, 0, 0] }, // BH: 2 * 0 for unplayed rounds
+        { playerId: "B", rank: 1, scores: [2, 2.5, 2, 2.5] }, // BH: 2 for unplayed + 0.5 for A
+        { playerId: "C", rank: 2, scores: [1.5, 2, 1.5, 1.75] }, // BH: 0.5 for A + 1.5 for bye
+        { playerId: "A", rank: 3, scores: [0.5, 3.5, 2, 0.75] }, // BH: 1.5 for C + 2 for B
+        { playerId: "D", rank: 4, scores: [0, 0, 0, 0] }, // BH: 2 * 0 for unplayed rounds
       ])
     })
 

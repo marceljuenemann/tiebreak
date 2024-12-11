@@ -28,6 +28,12 @@ export enum Tiebreak {
   BUCHHOLZ_CUT2 = "BH-C2",
   BUCHHOLZ_MEDIAN1 = "BH-M1",
   BUCHHOLZ_MEDIAN2 = "BH-M2",
+
+  /**
+   * Calculated by adding, for each round, a value given by multiplying the final
+   * score of the opponents by the points scored against them.
+   */
+  SONNEBORG_BERGER = "SB",
 }
 
 export enum UnplayedRoundsAdjustment {
@@ -137,6 +143,9 @@ export class Tiebreaker {
         return this.buchholz(player, round, 1, 1)
       case Tiebreak.BUCHHOLZ_MEDIAN2:
         return this.buchholz(player, round, 2, 2)
+
+      case Tiebreak.SONNEBORG_BERGER:
+        return this.sonnebornBerger(player, round)
     }
   }
 
