@@ -189,18 +189,66 @@ describe("TiebreakCalculation", () => {
     })
 
     /*
-    TODO: Test more modifiers with old FIDE unplayed rounds adjustments
-    - Cut-1
-    - Median-1
-    - Cut-2
-    - Very high cut numbers
+      TODO: Test more modifiers with old FIDE unplayed rounds adjustments
+      - Cut-1
+      - Median-1
+      - Cut-2
+      - Very high cut numbers
 
-    describe("with modifiers", () => {
+      describe("with modifiers", () => {
 
-    
-
-    })
+      })
     */
+  })
+
+  describe("sonnebornBerger", () => {
+    describe("with FIDE_2023 unplayed rounds adjustment", () => {
+      it("should pass FIDE exercise 11 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2023)
+        expect(tiebreak.sonnebornBerger("1", 5)).toEqual(8)
+        expect(tiebreak.sonnebornBerger("3", 5)).toEqual(10.5)
+        expect(tiebreak.sonnebornBerger("16", 5)).toEqual(7.25)
+        expect(tiebreak.sonnebornBerger("4", 5)).toEqual(9.75)
+      })
+
+      it("should pass FIDE exercise 12 (2023)", async () => {
+        const rounds = await readTestCases("fide-exercise-2023")
+        const tiebreak = new Tiebreaker(rounds, UnplayedRoundsAdjustment.FIDE_2023)
+        expect(tiebreak.adjustedScore("2", 5)).toEqual(4)
+        expect(tiebreak.sonnebornBerger("2", 5)).toEqual(9.5)
+        expect(tiebreak.adjustedScore("3", 5)).toEqual(3.5)
+        expect(tiebreak.sonnebornBerger("3", 5)).toEqual(10.5)
+        expect(tiebreak.adjustedScore("4", 5)).toEqual(3.5)
+        expect(tiebreak.sonnebornBerger("4", 5)).toEqual(9.75)
+        expect(tiebreak.adjustedScore("1", 5)).toEqual(3.5)
+        expect(tiebreak.sonnebornBerger("1", 5)).toEqual(8)
+        expect(tiebreak.adjustedScore("16", 5)).toEqual(3.5)
+        expect(tiebreak.sonnebornBerger("16", 5)).toEqual(7.25)
+        expect(tiebreak.adjustedScore("6", 5)).toEqual(3)
+        expect(tiebreak.sonnebornBerger("6", 5)).toEqual(6.5)
+        expect(tiebreak.adjustedScore("11", 5)).toEqual(2.5)
+        expect(tiebreak.sonnebornBerger("11", 5)).toEqual(5.75)
+        expect(tiebreak.adjustedScore("8", 5)).toEqual(2.5)
+        expect(tiebreak.sonnebornBerger("8", 5)).toEqual(5.25)
+        expect(tiebreak.adjustedScore("5", 5)).toEqual(2.5)
+        expect(tiebreak.sonnebornBerger("5", 5)).toEqual(4.25)
+        expect(tiebreak.adjustedScore("14", 5)).toEqual(2)
+        expect(tiebreak.sonnebornBerger("14", 5)).toEqual(4.5)
+        expect(tiebreak.adjustedScore("12", 5)).toEqual(3.0)
+        expect(tiebreak.sonnebornBerger("12", 5)).toEqual(4.0)
+        expect(tiebreak.adjustedScore("15", 5)).toEqual(2)
+        expect(tiebreak.sonnebornBerger("15", 5)).toEqual(3.5)
+        expect(tiebreak.adjustedScore("13", 5)).toEqual(1.5)
+        expect(tiebreak.sonnebornBerger("13", 5)).toEqual(4.25)
+        expect(tiebreak.adjustedScore("7", 5)).toEqual(1.5)
+        expect(tiebreak.sonnebornBerger("7", 5)).toEqual(3.25)
+        expect(tiebreak.adjustedScore("10", 5)).toEqual(1.0)
+        expect(tiebreak.sonnebornBerger("10", 5)).toEqual(1.5)
+      })
+    })
+
+    // TODO: Test with FIDE_2009 and NONE unplayed rounds adjustments.
   })
 
   describe("ranking", () => {
@@ -221,12 +269,17 @@ describe("TiebreakCalculation", () => {
       ])
       const tiebreak = new Tiebreaker(results, UnplayedRoundsAdjustment.FIDE_2023)
       expect(
-        tiebreak.ranking(2, [Tiebreak.SCORE, Tiebreak.BUCHHOLZ, Tiebreak.BUCHHOLZ_CUT1]),
+        tiebreak.ranking(2, [
+          Tiebreak.SCORE,
+          Tiebreak.BUCHHOLZ,
+          Tiebreak.BUCHHOLZ_CUT1,
+          Tiebreak.SONNEBORN_BERGER,
+        ]),
       ).toEqual([
-        { playerId: "B", rank: 1, scores: [2, 2.5, 2] }, // BH: 2 for unplayed + 0.5 for A
-        { playerId: "C", rank: 2, scores: [1.5, 2, 1.5] }, // BH: 0.5 for A + 1.5 for bye
-        { playerId: "A", rank: 3, scores: [0.5, 3.5, 2] }, // BH: 1.5 for C + 2 for B
-        { playerId: "D", rank: 4, scores: [0, 0, 0] }, // BH: 2 * 0 for unplayed rounds
+        { playerId: "B", rank: 1, scores: [2, 2.5, 2, 2.5] }, // BH: 2 for unplayed + 0.5 for A
+        { playerId: "C", rank: 2, scores: [1.5, 2, 1.5, 1.75] }, // BH: 0.5 for A + 1.5 for bye
+        { playerId: "A", rank: 3, scores: [0.5, 3.5, 2, 0.75] }, // BH: 1.5 for C + 2 for B
+        { playerId: "D", rank: 4, scores: [0, 0, 0, 0] }, // BH: 2 * 0 for unplayed rounds
       ])
     })
 

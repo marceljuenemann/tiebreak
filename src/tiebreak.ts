@@ -2,6 +2,7 @@ import {
   PlayerId,
   PlayerResult,
   Results,
+  Score,
   isPaired,
   isPlayed,
   isVoluntarilyUnplayedRound,
@@ -27,6 +28,12 @@ export enum Tiebreak {
   BUCHHOLZ_CUT2 = "BH-C2",
   BUCHHOLZ_MEDIAN1 = "BH-M1",
   BUCHHOLZ_MEDIAN2 = "BH-M2",
+
+  /**
+   * Calculated by adding, for each round, a value given by multiplying the final
+   * score of the opponents by the points scored against them.
+   */
+  SONNEBORN_BERGER = "SB",
 }
 
 export enum UnplayedRoundsAdjustment {
@@ -64,7 +71,7 @@ export interface PlayerRanking {
 
 interface AdjustedGame {
   round: number
-  gameScore: number
+  gameScore: Score
   opponentScore: number
   isVur: boolean
 }
@@ -136,6 +143,9 @@ export class Tiebreaker {
         return this.buchholz(player, round, 1, 1)
       case Tiebreak.BUCHHOLZ_MEDIAN2:
         return this.buchholz(player, round, 2, 2)
+
+      case Tiebreak.SONNEBORN_BERGER:
+        return this.sonnebornBerger(player, round)
     }
   }
 
@@ -252,8 +262,16 @@ export class Tiebreaker {
     return this.sum(games.map((g) => g.opponentScore))
   }
 
+  /**
+   * Sonneborn-Berger score. Note that unplayed games are adjusted according to the configured UnplayedRoundsAdjustment.
+   */
+  public sonnebornBerger(player: PlayerId, round: number): number {
+    const games = this.adjustedGames(player, round)
+    return this.sum(games.map((g) => g.opponentScore * g.gameScore))
+  }
+
   // TODO: Maybe turn PlayerResult into a class which returns the score?
-  private scoreForResult(result: PlayerResult): number {
+  private scoreForResult(result: PlayerResult): Score {
     switch (result) {
       case "unpaired":
         return 0
